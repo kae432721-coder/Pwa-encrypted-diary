@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;600;700;900&family=Lora:wght@400;500;700&display=swap" rel="stylesheet">
   
-  <!-- DECENTRALIZED MESH NETWORK ENGINE (GUN.JS) -->
+  <!-- DECENTRALIZED MESH NETWORK ENGINE -->
   <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
 
   <style>
@@ -145,7 +145,7 @@
           <div class="metadata-block">
             STATUS: <span style="color:#ff5555;">RESTRICTED</span><br>
             CLEARANCE: STANDARD<br>
-            PROTOCOL: OFFLINE
+            PROTOCOL: MESH P2P
           </div>
         </div>
 
@@ -196,7 +196,6 @@
   <script>
     // --- INITIALIZE DECENTRALIZED MESH RELAY ---
     const gun = Gun(['https://relay.peer.ooo/gun', 'https://gun-manhattan.herokuapp.com/gun']);
-
 
     const encryptText = (text, key) => {
       if (!text || !key) return text;
@@ -368,6 +367,229 @@
 
     // --- CONNECT TO REAL-TIME PASSWORD NODE ---
     const connectToMeshNetwork = (key) => {
-      // Create a specific node locator based on the password hash
       const networkNamespace = btoa(key).replace(/=/g, '').slice(0, 16);
-      currentRoom = gun.get('pwa-mesh-vault-v1').get(networ
+      currentRoom = gun.get('pwa-mesh-vault-v1').get(networkNamespace);
+      
+      currentRoom.map().on((data, id) => {
+        if (!data) return;
+        const idx = records.findIndex(r => r.id === id);
+        if (idx > -1) {
+          if (new Date(data.timestamp) > new Date(records[idx].timestamp)) {
+            records[idx] = data;
+          }
+        } else {
+          records.push(data);
+        }
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        renderRecords();
+      });
+    };
+
+    els.unlockForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!els.keyInput.value.trim()) return;
+      activeKey = els.keyInput.value;
+      
+      if (activeKey === MASTER_KEY) {
+        els.keySignature.innerText = "[ OMEGA_CLEARANCE_GRANTED ]";
+        els.trayGeneric.classList.add("hidden");
+        els.trayMaster.classList.remove("hidden");
+      } else {
+        els.keySignature.innerText = btoa(activeKey);
+        els.trayGeneric.classList.remove("hidden");
+        els.trayMaster.classList.add("hidden");
+      }
+      
+      els.unlockScreen.classList.add("hidden");
+      els.mainWorkspace.classList.remove("hidden");
+      
+      connectToMeshNetwork(activeKey);
+      renderRecords();
+      resetTimer();
+    });
+
+    els.btnLock.addEventListener("click", lockSystem);
+    els.mobileToggle.addEventListener("click", () => els.sidebar.classList.toggle("open"));
+
+    els.btnNew.addEventListener("click", () => {
+      activeRecordId = null;
+      els.editor.value = "";
+      isAuthorized = true;
+      els.recordTitle.innerText = "NEW RECORD";
+      els.badgeLocked.classList.add("hidden");
+      els.btnSeal.classList.add("hidden");
+      els.editor.disabled = false;
+      els.payloadSize.innerText = "Bytes: 0";
+      renderRecords();
+      els.sidebar.classList.remove("open");
+      els.editor.focus();
+    });
+
+    const loadRecord = (record, isOwned) => {
+      activeRecordId = record.id;
+      
+      if (isOwned) {
+        els.recordTitle.innerText = record.title || record.id;
+        isAuthorized = true;
+        els.editor.value = decryptText(record.content, activeKey);
+        els.badgeLocked.classList.add("hidden");
+        
+        if (record.isSealed) {
+          els.editor.disabled = true;
+          els.btnSeal.innerText = "BREAK SEAL";
+          els.btnSeal.classList.remove("hidden");
+        } else {
+          els.editor.disabled = false;
+          els.btnSeal.innerText = "SEAL LOG";
+          els.btnSeal.classList.remove("hidden");
+        }
+      } else {
+        els.recordTitle.innerText = record.id;
+        isAuthorized = false;
+        els.editor.value = record.content; 
+        els.badgeLocked.classList.remove("hidden");
+        els.btnSeal.classList.add("hidden");
+        els.editor.disabled = true;
+      }
+      
+      els.payloadSize.innerText = `Bytes: ${els.editor.value.length}`;
+      renderRecords();
+      els.sidebar.classList.remove("open");
+    };
+
+    els.editor.addEventListener("input", (e) => {
+      if (!isAuthorized) return; 
+      const text = e.target.value;
+      els.payloadSize.innerText = `Bytes: ${text.length}`;
+      const sessionHash = btoa(activeKey);
+
+      let recordPayload = null;
+
+      if (!activeRecordId && text.length > 0) {
+        activeRecordId = `REC-${Date.now().toString().slice(-6)}`;
+        const title = `Log Entry ${records.length + 1}`;
+        els.recordTitle.innerText = title;
+        els.btnSeal.innerText = "SEAL LOG";
+        els.btnSeal.classList.remove("hidden");
+        
+        recordPayload = { 
+          id: activeRecordId, title: title, timestamp: new Date().toISOString(),
+          startTime: getFormattedDate(), isSealed: false,
+          content: encryptText(text, activeKey), keyHash: sessionHash
+        };
+        records.push(recordPayload);
+        renderRecords();
+      } else if (activeRecordId) {
+        const idx = records.findIndex(r => r.id === activeRecordId);
+        if (idx > -1) {
+          records[idx].content = encryptText(text, activeKey);
+          records[idx].keyHash = sessionHash;
+          records[idx].timestamp = new Date().toISOString();
+          recordPayload = records[idx];
+        }
+      }
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      
+      if (currentRoom && recordPayload) {
+        currentRoom.get(activeRecordId).put(recordPayload);
+      }
+    });
+
+    els.recordTitle.addEventListener("dblclick", () => {
+      if (!isAuthorized || !activeRecordId) return;
+      const currentTitle = els.recordTitle.innerText;
+      els.recordTitle.innerHTML = `<input type="text" id="rename-input" class="rename-input uppercase" value="${currentTitle}" />`;
+      const input = document.getElementById("rename-input");
+      input.focus();
+      input.select();
+      
+      const saveRename = () => {
+        const newTitle = input.value.trim() || "UNTITLED";
+        els.recordTitle.innerText = newTitle;
+        const idx = records.findIndex(r => r.id === activeRecordId);
+        if (idx > -1) {
+          records[idx].title = newTitle;
+          records[idx].timestamp = new Date().toISOString();
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+          if (currentRoom) currentRoom.get(activeRecordId).put(records[idx]);
+          renderRecords();
+        }
+      };
+      input.addEventListener("blur", saveRename);
+      input.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); input.blur(); } });
+    });
+
+    els.btnSeal.addEventListener("click", () => {
+      if (!isAuthorized || !activeRecordId) return;
+      const idx = records.findIndex(r => r.id === activeRecordId);
+      if (idx === -1) return;
+      
+      if (records[idx].isSealed) {
+        records[idx].isSealed = false;
+        records[idx].timestamp = new Date().toISOString();
+        els.editor.disabled = false;
+        els.btnSeal.innerText = "SEAL LOG";
+        els.editor.focus();
+      } else {
+        const nowTime = getFormattedDate();
+        const sealStamp = `\n\n--- Commenced: ${records[idx].startTime} | Sealed: ${nowTime} ---`;
+        els.editor.value += sealStamp;
+        records[idx].content = encryptText(els.editor.value, activeKey);
+        records[idx].isSealed = true;
+        records[idx].timestamp = new Date().toISOString();
+        els.editor.disabled = true;
+        els.btnSeal.innerText = "BREAK SEAL";
+      }
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      if (currentRoom) currentRoom.get(activeRecordId).put(records[idx]);
+      renderRecords();
+    });
+
+    els.btnExport.addEventListener("click", () => {
+      let exportData = [];
+      if (activeKey === MASTER_KEY) {
+        exportData = records;
+      } else {
+        const sessionHash = btoa(activeKey);
+        exportData = records.filter(r => r.keyHash === sessionHash || !r.keyHash);
+      }
+      const data = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([data], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sys_archive_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    els.btnImport.addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          if (Array.isArray(imported)) {
+            const existingIds = new Set(records.map(r => r.id));
+            const newRecords = imported.filter(r => !existingIds.has(r.id));
+            records = [...records, ...newRecords];
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            
+            if (currentRoom) {
+              newRecords.forEach(r => currentRoom.get(r.id).put(r));
+            }
+            
+            renderRecords();
+            alert("Data Core synchronized successfully.");
+          }
+        } catch (err) { alert("Failed to synchronize: Invalid core data."); }
+      };
+      reader.readAsText(file);
+      e.target.value = ""; 
+    });
+  </script>
+</body>
+</html>
