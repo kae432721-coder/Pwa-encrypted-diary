@@ -37,7 +37,6 @@
     ::-webkit-scrollbar-thumb { background: rgba(27, 18, 89, 0.3); }
     #sidebar ::-webkit-scrollbar-thumb { background: rgba(247, 247, 255, 0.3); }
 
-    /* MESH NETWORK CANVAS STYLING */
     #mesh-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
     
     #unlock-screen { height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center; background-color: var(--ghost); position: absolute; z-index: 100; flex-direction: column; gap: 20px;}
@@ -45,7 +44,7 @@
     #master-key-input { width: 100%; max-width: 340px; background: transparent; border: none; border-bottom: 2px dashed var(--ink); color: var(--ink); outline: none; text-align: center; font-size: 1.25rem; padding: 12px; font-family: var(--font-mono); font-weight: bold; transition: border 0.3s; z-index: 2; position: relative;}
     #master-key-input:focus { border-bottom: 2px solid var(--ink); }
     
-    .sync-status { font-family: var(--font-mono); font-size: 0.65rem; opacity: 0.6; font-weight: bold; z-index: 2; position: relative; }
+    .sync-status { font-family: var(--font-mono); font-size: 0.65rem; opacity: 0.6; font-weight: bold; z-index: 2; position: relative; text-align: center; }
 
     #main-workspace { height: 100vh; width: 100vw; display: flex; }
     
@@ -98,6 +97,10 @@
     
     .payload-size { position: absolute; bottom: 25px; right: 50px; font-weight: 900; font-size: 0.7rem; opacity: 0.5; font-family: var(--font-mono); }
     @media (max-width: 1023px) { .payload-size { right: 25px; bottom: 20px; } }
+    
+    .status-indicator { font-family: var(--font-mono); font-size: 0.6rem; margin-top: -15px; margin-bottom: 10px; font-weight: bold; }
+    .status-offline { color: #ff5555; }
+    .status-online { color: #55ff55; }
   </style>
 </head>
 <body>
@@ -105,13 +108,11 @@
   <div id="blur-overlay" class="hidden"></div>
 
   <div id="unlock-screen">
-    <!-- NATIVE MESH CANVAS -->
     <canvas id="mesh-canvas"></canvas>
-    
     <form id="unlock-form">
       <input type="password" id="master-key-input" autofocus autocomplete="off" spellcheck="false" class="tracking-mega" />
     </form>
-    <div id="connection-status" class="sync-status uppercase">AWAITING KEY...</div>
+    <div id="connection-status" class="sync-status uppercase">AWAITING KEY...<br><span style="font-size: 0.5rem; opacity: 0.5;">DIRECT WIRE PROTOCOL V1</span></div>
   </div>
 
   <div id="main-workspace" class="hidden">
@@ -123,6 +124,7 @@
       <div class="sidebar-content">
         <div class="tray-section" style="text-align: center; margin-bottom: 5px;">
           <h1 style="font-family: var(--font-header); font-size: 1.6rem; letter-spacing: 0.15em; font-weight: 700; color: #fff;">SYSTEM ARCHIVE</h1>
+          <div id="wire-status" class="status-indicator status-offline uppercase tracking-widest">P2P: SEARCHING FOR PEERS...</div>
         </div>
 
         <div class="tray-section">
@@ -152,7 +154,7 @@
           <div class="metadata-block">
             STATUS: <span style="color:#ff5555;">RESTRICTED</span><br>
             CLEARANCE: STANDARD<br>
-            PROTOCOL: NTFY CLOUD RELAY
+            PROTOCOL: WEBRTC DIRECT-WIRE
           </div>
         </div>
 
@@ -200,7 +202,11 @@
     </div>
   </div>
 
-  <script>
+  <!-- MODULE SCRIPT FOR WEBRTC ENGINES -->
+  <script type="module">
+    // Import Trystero for Server-less WebRTC mesh networking
+    import { joinRoom } from 'https://cdn.jsdelivr.net/npm/trystero@0.20.1/dist/trystero-torrent.min.js';
+
     // --- MESH VISUALIZATION ENGINE ---
     const meshCanvas = document.getElementById('mesh-canvas');
     const ctx = meshCanvas.getContext('2d');
@@ -208,28 +214,22 @@
     let particles = [];
     let isAnimating = true;
     
-    // Physics tracking
     let pointer = { x: -1000, y: -1000, vx: 0, vy: 0 };
     let lastPointer = { x: -1000, y: -1000 };
 
     class Node {
       constructor() {
-        this.x = Math.random() * cw;
-        this.y = Math.random() * ch;
+        this.x = Math.random() * window.innerWidth;
+        this.y = Math.random() * window.innerHeight;
         this.vx = (Math.random() - 0.5) * 0.4;
         this.vy = (Math.random() - 0.5) * 0.4;
         this.radius = Math.random() * 1.5 + 0.8;
       }
       update() {
-        // 1. Brownian Jitter
         this.vx += (Math.random() - 0.5) * 0.08;
         this.vy += (Math.random() - 0.5) * 0.08;
-        
-        // Velocity Cap (Friction)
-        this.vx *= 0.96;
-        this.vy *= 0.96;
+        this.vx *= 0.96; this.vy *= 0.96;
 
-        // 2. Focus Zone (Center Repulsion for Password Readability)
         const dxCenter = (cw / 2) - this.x;
         const dyCenter = (ch / 2) - this.y;
         const distCenter = Math.sqrt(dxCenter*dxCenter + dyCenter*dyCenter);
@@ -239,7 +239,6 @@
           this.vy -= (dyCenter / distCenter) * force * 1.5;
         }
 
-        // 3. Slipstream Interaction (Swipe Wake)
         const dxPointer = pointer.x - this.x;
         const dyPointer = pointer.y - this.y;
         const distPointer = Math.sqrt(dxPointer*dxPointer + dyPointer*dyPointer);
@@ -248,10 +247,8 @@
            this.vy += pointer.vy * 0.03;
         }
 
-        this.x += this.vx;
-        this.y += this.vy;
+        this.x += this.vx; this.y += this.vy;
 
-        // Wraparound edge handling
         if(this.x < 0) this.x = cw;
         if(this.x > cw) this.x = 0;
         if(this.y < 0) this.y = ch;
@@ -287,7 +284,6 @@
 
       particles.forEach(p => p.update());
 
-      // Draw active connections
       ctx.lineWidth = 0.6;
       for(let i=0; i<particles.length; i++) {
         for(let j=i+1; j<particles.length; j++) {
@@ -306,9 +302,7 @@
         particles[i].draw();
       }
       
-      // Decay pointer velocity if idle
       if(pointer.vx === 0 && pointer.vy === 0) { lastPointer.x = pointer.x; lastPointer.y = pointer.y; }
-      
       requestAnimationFrame(renderMesh);
     }
 
@@ -324,10 +318,8 @@
        pointer.x = e.touches[0].clientX; pointer.y = e.touches[0].clientY;
     }, {passive:true});
 
-    // Start mesh
     initMesh();
     renderMesh();
-
 
     // --- VIGENÈRE CIPHER ENGINE ---
     const encryptText = (text, key) => {
@@ -364,7 +356,7 @@
       return result;
     };
 
-    const STORAGE_KEY = "system_archive_logs_v7";
+    const STORAGE_KEY = "system_archive_logs_v9_webrtc";
     const MASTER_KEY = "ithinkandthereforeiam";
     let activeKey = "";
     let records = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
@@ -372,10 +364,11 @@
     let isAuthorized = true;
     let originalDocTitle = document.title;
     
-    // --- NTFY NETWORK VARIABLES ---
-    let currentTopic = null;
-    let eventSource = null;
+    // WebRTC Variables
+    let currentRoom = null;
+    let sendSyncAction = null;
     let syncTimer = null;
+    let peerCount = 0;
 
     const els = {
       unlockScreen: document.getElementById("unlock-screen"),
@@ -383,6 +376,7 @@
       unlockForm: document.getElementById("unlock-form"),
       keyInput: document.getElementById("master-key-input"),
       connStatus: document.getElementById("connection-status"),
+      wireStatus: document.getElementById("wire-status"),
       sidebar: document.getElementById("sidebar"),
       mobileToggle: document.getElementById("mobile-toggle"),
       recordList: document.getElementById("record-list"),
@@ -395,12 +389,7 @@
       payloadSize: document.getElementById("payload-size"),
       btnLock: document.getElementById("btn-lock"),
       dateDisplay: document.getElementById("date-display"),
-      timeDisplay: document.getElementById("time-display"),
-      btnExport: document.getElementById("btn-export"),
-      btnImport: document.getElementById("btn-import"),
-      blurOverlay: document.getElementById("blur-overlay"),
-      trayGeneric: document.getElementById("tray-metadata-generic"),
-      trayMaster: document.getElementById("tray-metadata-master")
+      timeDisplay: document.getElementById("time-display")
     };
 
     const getFormattedDate = () => {
@@ -415,11 +404,11 @@
     }, 1000);
 
     window.addEventListener("blur", () => {
-      if(activeKey) els.blurOverlay.classList.remove("hidden");
+      if(activeKey) document.getElementById("blur-overlay").classList.remove("hidden");
       document.title = "New Tab";
     });
     window.addEventListener("focus", () => {
-      els.blurOverlay.classList.add("hidden");
+      document.getElementById("blur-overlay").classList.add("hidden");
       document.title = originalDocTitle;
     });
 
@@ -483,8 +472,10 @@
 
     const lockSystem = () => {
       activeKey = "";
-      if(eventSource) { eventSource.close(); eventSource = null; }
-      currentTopic = null;
+      if (currentRoom) { currentRoom.leave(); currentRoom = null; }
+      sendSyncAction = null;
+      peerCount = 0;
+      
       els.editor.value = "";
       activeRecordId = null;
       isAuthorized = true;
@@ -497,112 +488,112 @@
       els.unlockScreen.classList.remove("hidden");
       els.sidebar.classList.remove("open");
       els.keyInput.value = "";
-      els.connStatus.innerText = "AWAITING KEY...";
+      els.connStatus.innerHTML = "AWAITING KEY...<br><span style='font-size: 0.5rem; opacity: 0.5;'>DIRECT WIRE PROTOCOL V1</span>";
+      els.wireStatus.innerText = "P2P: SEARCHING FOR PEERS...";
+      els.wireStatus.className = "status-indicator status-offline uppercase tracking-widest";
       
-      els.trayGeneric.classList.remove("hidden");
-      els.trayMaster.classList.add("hidden");
+      document.getElementById("tray-metadata-generic").classList.remove("hidden");
+      document.getElementById("tray-metadata-master").classList.add("hidden");
       
       clearTimeout(inactivityTimer);
       
-      // Reactivate Mesh Engine
       isAnimating = true;
       pointer = { x: -1000, y: -1000, vx: 0, vy: 0 }; 
       initMesh();
       renderMesh();
     };
 
-    // --- INTEGRATE NTFY CLOUD BROKER ---
-    const broadcastRecord = (payload) => {
-      if (!currentTopic) return;
-      fetch(`https://ntfy.sh/${currentTopic}`, {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      }).catch(e => console.error("Mesh broadcast failed"));
+    const processIncomingRecordArray = (incomingArray) => {
+      let dataChanged = false;
+      incomingArray.forEach(incoming => {
+          const idx = records.findIndex(r => r.id === incoming.id);
+          if (idx > -1) {
+            if (new Date(incoming.timestamp) > new Date(records[idx].timestamp)) {
+              records[idx] = incoming;
+              dataChanged = true;
+            }
+          } else {
+            records.push(incoming);
+            dataChanged = true;
+          }
+      });
+      
+      if (dataChanged) {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+          renderRecords();
+
+          if (activeRecordId && activeKey) {
+             const currentActive = records.find(r => r.id === activeRecordId);
+             if (currentActive) {
+                 const sessionHash = btoa(activeKey);
+                 const isOwned = currentActive.keyHash === sessionHash || !currentActive.keyHash || activeKey === MASTER_KEY;
+                 if (isOwned && els.editor.value !== decryptText(currentActive.content, activeKey)) {
+                     const cursorPos = els.editor.selectionStart;
+                     els.editor.value = decryptText(currentActive.content, activeKey);
+                     els.editor.setSelectionRange(cursorPos, cursorPos);
+                 } else if (!isOwned) {
+                     els.editor.value = currentActive.content;
+                 }
+                 els.payloadSize.innerText = `Bytes: ${els.editor.value.length}`;
+                 if(currentActive.isSealed) {
+                    els.editor.disabled = true;
+                    els.btnSeal.innerText = isOwned ? "BREAK SEAL" : "SEAL LOG";
+                 }
+             }
+          }
+      }
     };
 
-    const processIncomingRecord = (incoming) => {
-      const idx = records.findIndex(r => r.id === incoming.id);
-      if (idx > -1) {
-        if (new Date(incoming.timestamp) > new Date(records[idx].timestamp)) {
-          records[idx] = incoming;
-        }
-      } else {
-        records.push(incoming);
-      }
+    const establishDirectWire = (key) => {
+      els.connStatus.innerHTML = "NEGOTIATING WEBRTC P2P TUNNEL...<br><span style='font-size: 0.5rem; opacity: 0.5;'>PLEASE WAIT...</span>";
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-      renderRecords();
+      // Let the user in immediately so they don't have to wait for the WebRTC handshake to finish
+      setTimeout(() => {
+          isAnimating = false;
+          els.unlockScreen.classList.add("hidden");
+          els.mainWorkspace.classList.remove("hidden");
+          renderRecords();
+          resetTimer();
+      }, 1500);
 
-      if (activeRecordId === incoming.id && activeKey) {
-         const sessionHash = btoa(activeKey);
-         const isOwned = incoming.keyHash === sessionHash || !incoming.keyHash || activeKey === MASTER_KEY;
-         if (isOwned && els.editor.value !== decryptText(incoming.content, activeKey)) {
-             const cursorPos = els.editor.selectionStart;
-             els.editor.value = decryptText(incoming.content, activeKey);
-             els.editor.setSelectionRange(cursorPos, cursorPos);
-         } else if (!isOwned) {
-             els.editor.value = incoming.content;
-         }
-         els.payloadSize.innerText = `Bytes: ${els.editor.value.length}`;
-         if(incoming.isSealed) {
-            els.editor.disabled = true;
-            els.btnSeal.innerText = isOwned ? "BREAK SEAL" : "SEAL LOG";
-         }
-      }
-    };
+      // Unique determinisic namespace for your app
+      const namespace = 'sys-archive-pwa-v1';
+      const roomId = btoa(key).replace(/=/g, '').toLowerCase().slice(0, 16);
+      
+      currentRoom = joinRoom({appId: namespace}, roomId);
+      
+      // Create a specific action channel for sending records
+      const [sendData, getSync] = currentRoom.makeAction('syncAction');
+      sendSyncAction = sendData;
 
-    const connectToCloudRelay = (key) => {
-      els.connStatus.innerText = "ESTABLISHING UPLINK...";
-      
-      currentTopic = 'sys-vault-' + btoa(key).replace(/=/g, '').toLowerCase().slice(0, 20);
-      
-      fetch(`https://ntfy.sh/${currentTopic}/json?since=12h`)
-        .then(res => res.text())
-        .then(text => {
-           const lines = text.trim().split('\n');
-           lines.forEach(line => {
-               if(!line) return;
-               try {
-                  const data = JSON.parse(line);
-                  if (data.event === 'message' && data.message) {
-                     processIncomingRecord(JSON.parse(data.message));
-                  }
-               } catch(e) {}
-           });
-           
-           const wsUrl = `wss://ntfy.sh/${currentTopic}/ws`;
-           eventSource = new WebSocket(wsUrl);
-           
-           eventSource.onopen = () => {
-             els.connStatus.innerText = "UPLINK SECURE";
-             // Shut down the mesh animation to save resources
-             isAnimating = false;
-             
-             els.unlockScreen.classList.add("hidden");
-             els.mainWorkspace.classList.remove("hidden");
-             renderRecords();
-             resetTimer();
-           };
-           
-           eventSource.onmessage = (e) => {
-             try {
-                const data = JSON.parse(e.data);
-                if (data.event === 'message' && data.message) {
-                   processIncomingRecord(JSON.parse(data.message));
-                }
-             } catch (err) {}
-           };
-        })
-        .catch(err => {
-           els.connStatus.innerText = "UPLINK FAILED. OFFLINE MODE.";
-           setTimeout(() => {
-             isAnimating = false;
-             els.unlockScreen.classList.add("hidden");
-             els.mainWorkspace.classList.remove("hidden");
-             renderRecords();
-             resetTimer();
-           }, 1000);
-        });
+      currentRoom.onPeerJoin(peerId => {
+          peerCount++;
+          els.wireStatus.innerText = `P2P: ${peerCount} PEER(S) CONNECTED`;
+          els.wireStatus.className = "status-indicator status-online uppercase tracking-widest";
+          
+          // SYNC ON JOIN: Automatically push your entire database to the new peer so they catch up
+          if (records.length > 0) {
+              sendSyncAction(records, peerId);
+          }
+      });
+
+      currentRoom.onPeerLeave(peerId => {
+          peerCount--;
+          if(peerCount <= 0) {
+             peerCount = 0;
+             els.wireStatus.innerText = "P2P: SEARCHING FOR PEERS...";
+             els.wireStatus.className = "status-indicator status-offline uppercase tracking-widest";
+          } else {
+             els.wireStatus.innerText = `P2P: ${peerCount} PEER(S) CONNECTED`;
+          }
+      });
+
+      // Listen for incoming data blocks
+      getSync((incomingData, peerId) => {
+          if (Array.isArray(incomingData)) {
+              processIncomingRecordArray(incomingData);
+          }
+      });
     };
 
     els.unlockForm.addEventListener("submit", (e) => {
@@ -612,15 +603,15 @@
       
       if (activeKey === MASTER_KEY) {
         els.keySignature.innerText = "[ OMEGA_CLEARANCE_GRANTED ]";
-        els.trayGeneric.classList.add("hidden");
-        els.trayMaster.classList.remove("hidden");
+        document.getElementById("tray-metadata-generic").classList.add("hidden");
+        document.getElementById("tray-metadata-master").classList.remove("hidden");
       } else {
         els.keySignature.innerText = btoa(activeKey);
-        els.trayGeneric.classList.remove("hidden");
-        els.trayMaster.classList.add("hidden");
+        document.getElementById("tray-metadata-generic").classList.remove("hidden");
+        document.getElementById("tray-metadata-master").classList.add("hidden");
       }
       
-      connectToCloudRelay(activeKey);
+      establishDirectWire(activeKey);
     });
 
     els.btnLock.addEventListener("click", lockSystem);
@@ -707,8 +698,9 @@
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
       
       clearTimeout(syncTimer);
-      if (recordPayload) {
-         syncTimer = setTimeout(() => { broadcastRecord(recordPayload); }, 1000);
+      if (recordPayload && sendSyncAction) {
+         // Fire payload directly across WebRTC
+         syncTimer = setTimeout(() => { sendSyncAction([recordPayload]); }, 500); 
       }
     });
 
@@ -728,7 +720,7 @@
           records[idx].title = newTitle;
           records[idx].timestamp = new Date().toISOString();
           localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-          broadcastRecord(records[idx]);
+          if(sendSyncAction) sendSyncAction([records[idx]]);
           renderRecords();
         }
       };
@@ -759,11 +751,11 @@
       }
       
       localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-      broadcastRecord(records[idx]); 
+      if(sendSyncAction) sendSyncAction([records[idx]]); 
       renderRecords();
     });
 
-    els.btnExport.addEventListener("click", () => {
+    document.getElementById("btn-export").addEventListener("click", () => {
       let exportData = [];
       if (activeKey === MASTER_KEY) {
         exportData = records;
@@ -781,7 +773,7 @@
       URL.revokeObjectURL(url);
     });
 
-    els.btnImport.addEventListener("change", (e) => {
+    document.getElementById("btn-import").addEventListener("change", (e) => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -794,7 +786,7 @@
             records = [...records, ...newRecords];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
             
-            newRecords.forEach(r => broadcastRecord(r));
+            if(sendSyncAction) sendSyncAction(newRecords);
             
             renderRecords();
             alert("Data Core synchronized successfully.");
