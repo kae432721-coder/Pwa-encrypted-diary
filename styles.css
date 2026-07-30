@@ -391,3 +391,87 @@ body {
   background: var(--bg-primary); padding: 30px; border-radius: 12px;
   width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
+
+/* --- THE "MOVING STRUCTURE" AESTHETIC --- */
+body {
+  /* This creates the slow, breathing gradient effect */
+  background: linear-gradient(-45deg, var(--bg-primary), var(--bg-secondary), var(--bg-primary));
+  background-size: 400% 400%;
+  animation: breathingBackground 15s ease infinite;
+}
+
+@keyframes breathingBackground {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* --- ORBS CANVAS --- */
+#orbs-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none; /* Lets you click the login buttons through the orbs */
+  opacity: 0.6;
+}
+
+/* Push the auth card above the orbs */
+.auth-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(253, 251, 247, 0.5);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+[data-theme="dark"] .auth-card {
+  background: rgba(26, 28, 35, 0.5);
+}
+
+/* --- PROFILE PICTURES & LIKES LISTS --- */
+.profile-img-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  margin: 0 auto 15px auto;
+  display: block;
+}
+
+.traits-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.trait-box {
+  flex: 1;
+  background: rgba(0,0,0,0.02);
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  padding: 10px;
+}
+[data-theme="dark"] .trait-box { background: rgba(255,255,255,0.02); }
+
+.trait-box h4 {
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 5px;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 3px;
+}
+
+.trait-box ul {
+  list-style-type: none;
+  font-size: 0.85rem;
+}
+.trait-box ul li {
+  margin-bottom: 4px;
+}
