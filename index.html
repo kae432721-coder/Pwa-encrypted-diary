@@ -19,6 +19,7 @@
 
   <!-- PHASE 1: AUTHENTICATION -->
   <div id="auth-screen" class="fullscreen-view">
+    <canvas id="orbs-canvas"></canvas> <!-- ORBS ANIMATION -->
     <div class="auth-card">
       <h1 class="title-elegant">Sanctuary</h1>
       <p class="subtitle">A secure space for your thoughts.</p>
@@ -54,8 +55,13 @@
         <li class="nav-item active" data-target="view-journal">My Journal</li>
         <li class="nav-item" data-target="view-people">People & Lore</li>
         <li class="nav-item" data-target="view-lists">Lists & Tasks</li>
+        <li class="nav-item" data-target="view-discover">Discover</li>
         <li class="nav-item" data-target="view-quotes">Saved Thoughts</li>
       </ul>
+      
+      <!-- CHANGE KEY BUTTON -->
+      <button id="btn-change-password" class="btn-secondary" style="margin-top: 20px; font-size: 0.75rem;">Change Master Key</button>
+      
       <div class="cloud-status" id="cloud-indicator">Cloud: Synced</div>
     </nav>
 
@@ -67,7 +73,6 @@
         <div class="date-display" id="current-date"></div>
         <div class="window-controls">
           <button id="btn-theme-toggle" class="icon-btn" title="Toggle Day/Night" aria-label="Toggle Theme">
-            <!-- Default to Moon icon -->
             <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             <svg id="icon-sun" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
           </button>
@@ -77,17 +82,13 @@
         </div>
       </header>
 
-      <!-- Dynamic Views (Controlled by JS) -->
+      <!-- Dynamic Views -->
       <section id="view-journal" class="view-section active">
         <div class="journal-layout">
-          <!-- Left side: History -->
           <div class="journal-sidebar">
             <button id="btn-new-entry" class="btn-primary" style="margin-bottom: 20px;">+ New Page</button>
-            <ul id="journal-history-list" class="history-list">
-              <!-- JS will populate past entries here -->
-            </ul>
+            <ul id="journal-history-list" class="history-list"></ul>
           </div>
-          <!-- Right side: Editor -->
           <div class="journal-editor">
             <div class="editor-header">
               <input type="text" id="entry-title" class="title-input" placeholder="What's on your mind?">
@@ -105,22 +106,30 @@
           <h2 class="section-title">People & Lore</h2>
           <button id="btn-add-person" class="btn-primary" style="width: auto;">+ Add Profile</button>
         </div>
-        <div id="people-grid" class="people-grid">
-          <!-- JS will populate profile cards here -->
-        </div>
+        <div id="people-grid" class="people-grid"></div>
         
-        <!-- Add Person Modal -->
+        <!-- UPGRADED Add Person Modal -->
         <div id="modal-person" class="modal hidden">
           <div class="modal-content">
             <h3 class="modal-title" style="font-family: var(--font-title); font-size: 2rem; margin-bottom: 15px;">New Profile</h3>
+            
+            <!-- Image Upload -->
+            <label for="person-image" style="font-size: 0.8rem; color: var(--text-muted);">Upload Portrait (Optional)</label>
+            <input type="file" id="person-image" class="input-minimal" accept="image/jpeg, image/png" style="padding: 5px;">
+            
             <input type="text" id="person-name" class="input-minimal" placeholder="Name">
             <div style="display: flex; gap: 10px;">
               <input type="text" id="person-age" class="input-minimal" placeholder="Age">
               <input type="text" id="person-relation" class="input-minimal" placeholder="Relation">
             </div>
-            <input type="date" id="person-birthday" class="input-minimal" title="Birthday">
-            <input type="text" id="person-likes" class="input-minimal" placeholder="Likes / Dislikes (e.g., Likes: Qawwalis. Dislikes: Chemistry.)">
-            <textarea id="person-lore" class="journal-textarea" style="min-height: 120px; border-bottom: 1px solid var(--border-light); font-size: 1rem;" placeholder="Recent lore, life updates, etc..."></textarea>
+            
+            <!-- Dual List Boxes for Likes/Dislikes -->
+            <div style="display: flex; gap: 10px;">
+              <textarea id="person-likes" class="journal-textarea" style="min-height: 80px; border: 1px solid var(--border-light); padding: 10px; font-size: 0.9rem;" placeholder="Likes (separate by commas)"></textarea>
+              <textarea id="person-dislikes" class="journal-textarea" style="min-height: 80px; border: 1px solid var(--border-light); padding: 10px; font-size: 0.9rem;" placeholder="Dislikes (separate by commas)"></textarea>
+            </div>
+            
+            <textarea id="person-lore" class="journal-textarea" style="min-height: 100px; border-bottom: 1px solid var(--border-light); font-size: 1rem; margin-top: 10px;" placeholder="Recent lore, life updates, etc..."></textarea>
             <div style="display: flex; gap: 10px; margin-top: 20px;">
               <button id="btn-save-person" class="btn-primary">Save Profile</button>
               <button id="btn-close-person" class="btn-secondary">Cancel</button>
@@ -134,9 +143,7 @@
           <h2 class="section-title">Lists & Tasks</h2>
           <button id="btn-add-list" class="btn-primary" style="width: auto;">+ Create List</button>
         </div>
-        <div id="lists-container" class="lists-container">
-          <!-- JS will populate lists here -->
-        </div>
+        <div id="lists-container" class="lists-container"></div>
 
         <!-- Add List Modal -->
         <div id="modal-list" class="modal hidden">
@@ -152,11 +159,18 @@
         </div>
       </section>
 
+      <!-- NEW DISCOVER SECTION -->
+      <section id="view-discover" class="view-section hidden">
+        <h2 class="section-title">Discover</h2>
+        <p class="placeholder-text" style="margin-bottom: 20px;">A constant stream of thoughts, poems, and philosophy.</p>
+        <div id="discover-feed" class="quotes-grid">
+          <!-- JS will constantly populate random thoughts here -->
+        </div>
+      </section>
+
       <section id="view-quotes" class="view-section hidden">
         <h2 class="section-title">Saved Thoughts</h2>
-        <div id="saved-quotes-container" class="quotes-grid">
-          <!-- JS will populate liked quotes here -->
-        </div>
+        <div id="saved-quotes-container" class="quotes-grid"></div>
       </section>
 
     </main>
