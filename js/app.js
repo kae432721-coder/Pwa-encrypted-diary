@@ -463,3 +463,29 @@ if (birthdateInput && ageInput) {
     ageInput.value = age;
   });
 }
+// --- CSS OVERRIDE: FORCE SLEEK DELETE BUTTONS ---
+// This injects the styles dynamically, bypassing the browser's CSS cache
+const styleFix = document.createElement('style');
+styleFix.innerHTML = `
+  #lists-container button,
+  #thoughts-feed button {
+    background: transparent !important;
+    border: none !important;
+    color: var(--text-muted) !important;
+    font-family: var(--font-ui) !important;
+    font-size: 0.85rem !important;
+    cursor: pointer !important;
+    padding: 0 !important;
+    margin-top: 10px !important;
+    box-shadow: none !important;
+    outline: none !important;
+    transition: color 0.2s ease !important;
+  }
+  #lists-container button:hover,
+  #thoughts-feed button:hover {
+    color: #E06C75 !important;
+    text-decoration: underline !important;
+  }
+`;
+document.head.appendChild(styleFix);
+
