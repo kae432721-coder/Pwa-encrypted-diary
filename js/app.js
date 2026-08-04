@@ -216,41 +216,48 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
-// --- ILLUMINATED HEXAGONAL SNOW PHYSICS ENGINE ---
+// --- PHOTOREALISTIC ILLUMINATED STORM ENGINE ---
 const initSnowAndWind = () => {
   const canvas = document.getElementById('snow-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   
+  let dpi = window.devicePixelRatio || 1;
+  let logicalWidth = 0;
+  let logicalHeight = 0;
+
   const resizeCanvas = () => {
     const container = canvas.parentElement;
-    const dpi = window.devicePixelRatio || 1;
-    canvas.width = container.clientWidth * dpi;
-    canvas.height = container.clientHeight * dpi;
+    dpi = window.devicePixelRatio || 1;
+    logicalWidth = container.clientWidth;
+    logicalHeight = container.clientHeight;
+    
+    canvas.width = logicalWidth * dpi;
+    canvas.height = logicalHeight * dpi;
     ctx.scale(dpi, dpi);
   };
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
   let snowflakes = [];
-  let globalWind = 1; // Start with a steady breeze
+  let globalWind = 1; 
   let targetWind = 1;
 
-  // Build the volumetric field
-  for (let i = 0; i < 150; i++) { 
+  // INCREASED DENSITY & SMALLER GRAIN
+  for (let i = 0; i < 280; i++) { 
     const depth = Math.random() * 100 + 1; 
     snowflakes.push({
-      x: Math.random() * (canvas.width / (window.devicePixelRatio || 1)),
-      y: Math.random() * (canvas.height / (window.devicePixelRatio || 1)),
+      x: Math.random() * logicalWidth,
+      y: Math.random() * logicalHeight,
       depth: depth,
-      radius: (depth / 100) * 2.5 + 0.8, 
+      // Smaller radius for a grainier, photorealistic look
+      radius: (depth / 100) * 1.5 + 0.4, 
       mass: (depth / 100) * 1.5 + 0.5,
       angle: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.05
     });
   }
 
-  // Weather system: Occasional, extremely slow transitions (every 18 seconds)
   setInterval(() => {
     targetWind = (Math.random() * 2.5) - 1.25; 
   }, 18000);
@@ -268,74 +275,87 @@ const initSnowAndWind = () => {
     ctx.fill();
   };
 
-  const animateSnow = () => {
-    const dpi = window.devicePixelRatio || 1;
-    const logicalWidth = canvas.width / dpi;
-    const logicalHeight = canvas.height / dpi;
+  // --- THE PRE-WARM SIMULATION ---
+  // Runs 600 frames of physics instantly so the storm is active when you open the page
+  for (let i = 0; i < 600; i++) {
+    globalWind += (targetWind - globalWind) * 0.0015; 
+    snowflakes.forEach(flake => {
+      flake.y += flake.mass; 
+      flake.angle += flake.rotationSpeed; 
+      flake.x += globalWind * flake.mass; 
+      
+      if (flake.y > logicalHeight + 10) {
+        flake.y = -10;
+        flake.x = Math.random() * logicalWidth;
+      }
+      if (flake.x > logicalWidth + 10) flake.x = -10;
+      if (flake.x < -10) flake.x = logicalWidth + 10;
+    });
+  }
 
+  const animateSnow = () => {
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     
-    // Light Source Configuration (Top Left)
-    const lightX = logicalWidth * 0.3;
+    // Light Source Configuration (Top Center/Left)
+    const lightX = logicalWidth * 0.35;
     const lightY = logicalHeight * 0.15;
-    const lightRadius = 350;
+    const lightRadius = 450; // Wide throw radius
 
-    // Draw the ambient streetlamp glow in Day Mode
-    if (!isDark) {
-      const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightRadius);
-      gradient.addColorStop(0, 'rgba(255, 235, 153, 0.15)'); // Warm glowing center
-      gradient.addColorStop(1, 'rgba(255, 235, 153, 0)');    // Fades into the white background
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, logicalWidth, logicalHeight);
-    }
+    // DRAW REALISTIC STREETLAMP (Visible in both Day and Night mode now)
+    // 1. The Volumetric Halo Glow
+    const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightRadius);
+    gradient.addColorStop(0, isDark ? 'rgba(255, 200, 100, 0.25)' : 'rgba(255, 220, 130, 0.3)'); 
+    gradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+    
+    // 2. The Physical Bulb Core
+    ctx.beginPath();
+    ctx.arc(lightX, lightY, 6, 0, Math.PI * 2);
+    ctx.fillStyle = isDark ? 'rgba(255, 240, 200, 0.9)' : 'rgba(255, 255, 255, 0.9)';
+    ctx.shadowBlur = 40;
+    ctx.shadowColor = 'rgba(255, 190, 80, 1)';
+    ctx.fill();
+    ctx.shadowBlur = 0; // Reset shadow so snowflakes don't glow heavily
 
-    // Ultra-slow smooth interpolation for the wind vector
+    // Smooth wind vector transition
     globalWind += (targetWind - globalWind) * 0.0015; 
 
     snowflakes.forEach(flake => {
-      // Default Base Optics
+      // Base Color (Slate/White depending on mode)
       let r = isDark ? 255 : 162;
       let g = isDark ? 255 : 180;
       let b = isDark ? 255 : 199;
       let baseOpacity = (flake.depth / 100) * (isDark ? 0.9 : 0.7) + 0.1;
 
-      // Dynamic Illumination Engine (Only triggers in Day Mode)
-      if (!isDark) {
-        const dx = flake.x - lightX;
-        const dy = flake.y - lightY;
-        const distance = Math.sqrt(dx * dx + dy * dy);
+      // Dynamic Illumination Engine (Calculates distance from the bulb)
+      const dx = flake.x - lightX;
+      const dy = flake.y - lightY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance < lightRadius) {
-          // Calculate how close the flake is to the center of the light bulb (0 to 1)
-          const intensity = 1 - (distance / lightRadius);
-          
-          // Interpolate RGB from Slate-Blue (162, 180, 199) to Streetlamp Warm Amber (255, 220, 120)
-          r = Math.floor(162 + (255 - 162) * (intensity * 1.2));
-          g = Math.floor(180 + (220 - 180) * (intensity * 1.2));
-          b = Math.floor(199 + (120 - 199) * (intensity * 1.2));
-          
-          // Clamp RGB values
-          r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
-          
-          // Spike the opacity as it passes through the beam
-          baseOpacity = Math.min(1, baseOpacity + (intensity * 0.6));
-        }
+      if (distance < lightRadius) {
+        const intensity = 1 - (distance / lightRadius);
+        
+        // Photorealistic scatter: Flakes turn warm amber as they enter the light
+        r = Math.floor(r + (255 - r) * (intensity * 1.5));
+        g = Math.floor(g + (210 - g) * (intensity * 1.5));
+        b = Math.floor(b + (100 - b) * (intensity * 1.5));
+        
+        r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+        
+        // Flakes light up aggressively (spike in opacity) near the core
+        baseOpacity = Math.min(1, baseOpacity + (intensity * 0.8));
       }
 
-      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-      ctx.globalAlpha = baseOpacity;
-      
+      ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
       drawHexagon(flake.x, flake.y, flake.radius, flake.angle);
 
-      // Kinematics: Gravity & Tumbling
+      // Kinematics
       flake.y += flake.mass; 
       flake.angle += flake.rotationSpeed; 
-      
-      // Wind: Parallax effect dictates that closer (heavier) flakes cover more horizontal ground
       flake.x += globalWind * flake.mass; 
 
-      // Boundary Loops
       if (flake.y > logicalHeight + 10) {
         flake.y = -10;
         flake.x = Math.random() * logicalWidth;
@@ -344,7 +364,6 @@ const initSnowAndWind = () => {
       if (flake.x < -10) flake.x = logicalWidth + 10;
     });
 
-    ctx.globalAlpha = 1;
     requestAnimationFrame(animateSnow);
   };
   animateSnow();
