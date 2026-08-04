@@ -130,7 +130,18 @@ body {
 
 /* --- JOURNAL EDITOR & SNOWBOARD CANVAS --- */
 .journal-layout { display: flex; gap: 40px; height: 100%; position: relative; }
-.journal-sidebar { width: 260px; border-right: 1px solid var(--border-light); padding-right: 24px; display: flex; flex-direction: column; flex-shrink: 0; z-index: 2; }
+
+/* The Secondary Sidebar (Now with slide animation) */
+.journal-sidebar { 
+  width: 260px; border-right: 1px solid var(--border-light); padding-right: 24px; 
+  display: flex; flex-direction: column; flex-shrink: 0; z-index: 5;
+  transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.4s ease, opacity 0.3s ease;
+  overflow: hidden;
+}
+.journal-sidebar.collapsed {
+  width: 0px; padding-right: 0px; border-right: none; opacity: 0;
+}
+
 .history-list { list-style: none; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
 .history-item { padding: 16px; border-radius: 8px; cursor: pointer; transition: background 0.2s; border: 1px solid transparent; }
 .history-item:hover { background: var(--bg-surface); }
@@ -138,21 +149,35 @@ body {
 .history-title { font-weight: 500; font-size: 0.95rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
 .history-date { font-size: 0.75rem; color: var(--text-muted); }
 
-.journal-editor-container { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 2; }
-.editor-toolbar { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 8px; margin-bottom: 24px; }
+.journal-editor-container { flex: 1; display: flex; flex-direction: column; position: relative; z-index: 10; }
+
+.editor-toolbar { 
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px; 
+  background: var(--bg-surface); border: 1px solid var(--border-light); 
+  border-radius: 8px; margin-bottom: 24px; position: relative; z-index: 10; 
+}
 .toolbar-btn { background: transparent; border: none; color: var(--text-muted); font-size: 0.95rem; cursor: pointer; padding: 4px 8px; border-radius: 4px; }
 .toolbar-btn:hover { background: var(--tag-bg); color: var(--text-main); }
 .toolbar-divider { width: 1px; height: 16px; background: var(--border-light); }
 .toolbar-status { font-size: 0.75rem; color: var(--text-muted); margin-left: 8px; }
 .btn-danger { color: #E06C75; }
 
-.title-input { background: transparent; border: none; outline: none; font-family: var(--font-reading); font-size: 3rem; font-weight: 600; color: var(--text-main); width: 100%; margin-bottom: 10px; }
+.title-input { background: transparent; border: none; outline: none; font-family: var(--font-reading); font-size: 3rem; font-weight: 600; color: var(--text-main); width: 100%; margin-bottom: 10px; position: relative; z-index: 10; }
 
 .journal-textarea, .card-body {
   font-family: var(--font-reading); font-size: 1.3rem; line-height: 1.8; max-width: 75ch; color: var(--text-main); 
 }
-.journal-textarea { flex: 1; width: 100%; background: transparent; border: none; outline: none; resize: none; padding-bottom: 60px; position: relative; z-index: 2; }
+.journal-textarea { 
+  flex: 1; width: 100%; background: transparent; border: none; outline: none; 
+  resize: none; padding-bottom: 60px; position: relative; z-index: 10; 
+}
 .journal-textarea::placeholder { color: var(--text-muted); opacity: 0.4; font-style: italic; }
+
+/* Snow and Wind Canvas (Forced strictly to the background) */
+#snow-canvas {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 0; opacity: 0.4;
+}
 
 /* Snow and Wind Canvas Overlay on Writing Board */
 #snow-canvas {
