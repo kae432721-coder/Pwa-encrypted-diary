@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>My Sanctuary</title>
+  <title>Sanctuary OS</title>
   
-  <!-- Soft, elegant typography -->
+  <!-- Premium Typography: Inter for clean UI, Lora for highly legible, long-distance reading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,700;1,500&family=Inter:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
   
@@ -19,10 +19,10 @@
 
   <!-- PHASE 1: AUTHENTICATION -->
   <div id="auth-screen" class="fullscreen-view">
-    <canvas id="orbs-canvas"></canvas> <!-- ORBS ANIMATION -->
+    <canvas id="orbs-canvas"></canvas>
     <div class="auth-card">
       <h1 class="title-elegant">Sanctuary</h1>
-      <p class="subtitle">A secure space for your thoughts.</p>
+      <p class="subtitle">A secure operating system for your mind.</p>
       
       <div id="step-google">
         <button id="btn-google-login" class="btn-primary">Sign in with Google</button>
@@ -30,8 +30,8 @@
       
       <div id="step-password" class="hidden">
         <p class="user-greeting" id="user-email-display"></p>
-        <input type="password" id="diary-password" placeholder="Enter your key..." class="input-minimal" autocomplete="off" />
-        <button id="btn-unlock" class="btn-primary">Unlock</button>
+        <input type="password" id="diary-password" placeholder="Enter your Master Key..." class="input-minimal" autocomplete="off" />
+        <button id="btn-unlock" class="btn-primary">Unlock Vault</button>
       </div>
     </div>
   </div>
@@ -48,21 +48,30 @@
   <!-- PHASE 3: MAIN WORKSPACE -->
   <div id="main-workspace" class="hidden">
     
-    <!-- Sidebar Navigation -->
-    <nav id="sidebar">
-      <h2 class="sidebar-title">Sanctuary</h2>
+    <!-- Dynamic Sliding Sidebar -->
+    <nav id="sidebar" class="sidebar-expanded">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">Sanctuary</h2>
+      </div>
       <ul class="nav-links">
-        <li class="nav-item active" data-target="view-journal">My Journal</li>
-        <li class="nav-item" data-target="view-people">People & Lore</li>
-        <li class="nav-item" data-target="view-lists">Lists & Tasks</li>
-        <li class="nav-item" data-target="view-discover">Discover</li>
-        <li class="nav-item" data-target="view-quotes">Saved Thoughts</li>
+        <li class="nav-item active" data-target="view-journal">
+          <span class="nav-icon">✎</span> <span class="nav-text">My Journal</span>
+        </li>
+        <li class="nav-item" data-target="view-people">
+          <span class="nav-icon">⚇</span> <span class="nav-text">People & Lore</span>
+        </li>
+        <li class="nav-item" data-target="view-lists">
+          <span class="nav-icon">≡</span> <span class="nav-text">Lists & Tasks</span>
+        </li>
+        <li class="nav-item" data-target="view-thoughts">
+          <span class="nav-icon">✧</span> <span class="nav-text">Thoughts</span>
+        </li>
       </ul>
       
-      <!-- CHANGE KEY BUTTON -->
-      <button id="btn-change-password" class="btn-secondary" style="margin-top: 20px; font-size: 0.75rem;">Change Master Key</button>
-      
-      <div class="cloud-status" id="cloud-indicator">Cloud: Synced</div>
+      <div class="sidebar-footer">
+        <button id="btn-change-password" class="btn-text-only">Change Master Key</button>
+        <div class="cloud-status" id="cloud-indicator">Cloud: Synced</div>
+      </div>
     </nav>
 
     <!-- Main Content Area -->
@@ -70,88 +79,120 @@
       
       <!-- Top Bar: Controls -->
       <header class="top-bar">
-        <div class="date-display" id="current-date"></div>
+        <div class="left-controls">
+          <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          </button>
+          <div class="date-display" id="current-date"></div>
+        </div>
+        
         <div class="window-controls">
-          <button id="btn-theme-toggle" class="icon-btn" title="Toggle Day/Night" aria-label="Toggle Theme">
+          <button id="btn-theme-toggle" class="icon-btn" title="Toggle Day/Night">
             <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             <svg id="icon-sun" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
           </button>
-          <button id="btn-lock-diary" class="icon-btn" title="Lock Diary" aria-label="Lock">
+          <button id="btn-lock-diary" class="icon-btn" title="Lock Diary">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </button>
         </div>
       </header>
 
       <!-- Dynamic Views -->
+      
+      <!-- 1. JOURNAL VIEW -->
       <section id="view-journal" class="view-section active">
         <div class="journal-layout">
-          <div class="journal-sidebar">
+          <div id="journal-history-panel" class="journal-sidebar">
             <button id="btn-new-entry" class="btn-primary" style="margin-bottom: 20px;">+ New Page</button>
             <ul id="journal-history-list" class="history-list"></ul>
           </div>
-          <div class="journal-editor">
-            <div class="editor-header">
-              <input type="text" id="entry-title" class="title-input" placeholder="What's on your mind?">
-              <button id="btn-delete-entry" class="icon-btn btn-danger hidden" title="Delete Page" aria-label="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          
+          <div class="journal-editor-container">
+            <!-- Hybrid Editor Toolbar -->
+            <div class="editor-toolbar">
+              <button class="toolbar-btn" data-format="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+              <button class="toolbar-btn" data-format="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+              <button class="toolbar-btn" data-format="bullet" title="Bullet List">• List</button>
+              <div class="toolbar-divider"></div>
+              <span class="toolbar-status">Markdown Supported</span>
+              <button id="btn-delete-entry" class="icon-btn btn-danger hidden" style="margin-left: auto;" title="Delete Page">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
-            <textarea id="entry-body" class="journal-textarea" placeholder="Dear Diary..."></textarea>
+            
+            <input type="text" id="entry-title" class="title-input" placeholder="Untitled">
+            <textarea id="entry-body" class="journal-textarea" placeholder="Start writing... (Use Markdown or the toolbar above)"></textarea>
           </div>
         </div>
       </section>
 
+      <!-- 2. PEOPLE & LORE VIEW -->
       <section id="view-people" class="view-section hidden">
         <div class="section-header">
-          <h2 class="section-title">People & Lore</h2>
-          <button id="btn-add-person" class="btn-primary" style="width: auto;">+ Add Profile</button>
+          <h2 class="section-title">Codex</h2>
+          <button id="btn-add-codex" class="btn-primary" style="width: auto;">+ Add Entry</button>
         </div>
-        <div id="people-grid" class="people-grid"></div>
+        <!-- Masonry Grid Container -->
+        <div id="codex-grid" class="masonry-grid"></div>
         
-        <!-- UPGRADED Add Person Modal -->
-        <div id="modal-person" class="modal hidden">
+        <!-- Dual Tab Modal: Person vs Lore -->
+        <div id="modal-codex" class="modal hidden">
           <div class="modal-content">
-            <h3 class="modal-title" style="font-family: var(--font-title); font-size: 2rem; margin-bottom: 15px;">New Profile</h3>
-            
-            <!-- Image Upload -->
-            <label for="person-image" style="font-size: 0.8rem; color: var(--text-muted);">Upload Portrait (Optional)</label>
-            <input type="file" id="person-image" class="input-minimal" accept="image/jpeg, image/png" style="padding: 5px;">
-            
-            <input type="text" id="person-name" class="input-minimal" placeholder="Name">
-            <div style="display: flex; gap: 10px;">
-              <input type="text" id="person-age" class="input-minimal" placeholder="Age">
-              <input type="text" id="person-relation" class="input-minimal" placeholder="Relation">
+            <div class="modal-tabs">
+              <button id="tab-btn-person" class="tab-btn active">👤 Person</button>
+              <button id="tab-btn-lore" class="tab-btn">📜 Lore</button>
             </div>
             
-            <!-- Dual List Boxes for Likes/Dislikes -->
-            <div style="display: flex; gap: 10px;">
-              <textarea id="person-likes" class="journal-textarea" style="min-height: 80px; border: 1px solid var(--border-light); padding: 10px; font-size: 0.9rem;" placeholder="Likes (separate by commas)"></textarea>
-              <textarea id="person-dislikes" class="journal-textarea" style="min-height: 80px; border: 1px solid var(--border-light); padding: 10px; font-size: 0.9rem;" placeholder="Dislikes (separate by commas)"></textarea>
+            <!-- PERSON INPUT -->
+            <div id="input-pane-person" class="tab-pane">
+              <div class="image-upload-wrapper">
+                <img id="person-img-preview" class="profile-img-preview hidden" src="" alt="Profile Preview">
+                <label for="person-image" class="btn-secondary" style="font-size: 0.8rem; display: inline-block; cursor: pointer;">Upload Portrait (< 100MB)</label>
+                <input type="file" id="person-image" class="hidden" accept="image/jpeg, image/png, image/webp">
+              </div>
+              <input type="text" id="person-name" class="input-minimal" placeholder="Name">
+              <div class="input-row">
+                <input type="text" id="person-age" class="input-minimal" placeholder="Age / Era">
+                <input type="text" id="person-relation" class="input-minimal" placeholder="Relation / Role">
+              </div>
+              <div class="input-row">
+                <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes: Punjabi music, Qawwalis..."></textarea>
+                <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes: Chemistry..."></textarea>
+              </div>
             </div>
+
+            <!-- LORE INPUT -->
+            <div id="input-pane-lore" class="tab-pane hidden">
+              <input type="text" id="lore-title" class="input-minimal" placeholder="Concept / Title">
+              <input type="text" id="lore-category" class="input-minimal" placeholder="Category (e.g., Chess Strategies, Anime Analysis)">
+            </div>
+
+            <!-- SHARED DEEP DIVE TEXTAREA -->
+            <textarea id="codex-notes" class="journal-textarea modal-textarea" placeholder="Deep-dive notes, analysis, or life updates... (e.g., Analyzing the narrative pacing of Bungou Stray Dogs, or JEE mock test strategies)"></textarea>
             
-            <textarea id="person-lore" class="journal-textarea" style="min-height: 100px; border-bottom: 1px solid var(--border-light); font-size: 1rem; margin-top: 10px;" placeholder="Recent lore, life updates, etc..."></textarea>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-              <button id="btn-save-person" class="btn-primary">Save Profile</button>
-              <button id="btn-close-person" class="btn-secondary">Cancel</button>
+            <div class="modal-actions">
+              <button id="btn-save-codex" class="btn-primary">Save to Codex</button>
+              <button id="btn-close-codex" class="btn-secondary">Cancel</button>
             </div>
           </div>
         </div>
       </section>
 
+      <!-- 3. LISTS & TASKS VIEW -->
       <section id="view-lists" class="view-section hidden">
         <div class="section-header">
-          <h2 class="section-title">Lists & Tasks</h2>
-          <button id="btn-add-list" class="btn-primary" style="width: auto;">+ Create List</button>
+          <h2 class="section-title">Lists</h2>
+          <button id="btn-add-list" class="btn-primary" style="width: auto;">+ New List</button>
         </div>
-        <div id="lists-container" class="lists-container"></div>
+        <div id="lists-container" class="masonry-grid"></div>
 
         <!-- Add List Modal -->
         <div id="modal-list" class="modal hidden">
           <div class="modal-content">
-            <h3 class="modal-title" style="font-family: var(--font-title); font-size: 2rem; margin-bottom: 15px;">New List</h3>
-            <input type="text" id="list-title" class="input-minimal" placeholder="e.g., Bucket List, Reading List, Weekly Tasks...">
+            <h3 class="modal-title">Create List</h3>
+            <input type="text" id="list-title" class="input-minimal" placeholder="e.g., College Preferences, Reading List...">
             <input type="text" id="list-first-item" class="input-minimal" placeholder="First item (e.g., Hit 1600 ELO in chess)">
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <div class="modal-actions">
               <button id="btn-save-list" class="btn-primary">Create</button>
               <button id="btn-close-list" class="btn-secondary">Cancel</button>
             </div>
@@ -159,19 +200,35 @@
         </div>
       </section>
 
-      <!-- NEW DISCOVER SECTION -->
-      <section id="view-discover" class="view-section hidden">
-        <h2 class="section-title">Discover</h2>
-        <p class="placeholder-text" style="margin-bottom: 20px;">A constant stream of thoughts, poems, and philosophy.</p>
-        <div id="discover-feed" class="quotes-grid">
-          <!-- JS will constantly populate random thoughts here -->
+      <!-- 4. THOUGHTS & ARCHIVE VIEW -->
+      <section id="view-thoughts" class="view-section hidden">
+        <h2 class="section-title">Thoughts & Archive</h2>
+        
+        <!-- Quick Capture Input -->
+        <div class="quick-capture-box">
+          <textarea id="quick-thought-input" class="input-minimal" placeholder="Jot down a sudden philosophy, a poem, or a stray thought..." rows="2"></textarea>
+          <button id="btn-save-thought" class="btn-primary" style="width: auto; align-self: flex-end;">Save</button>
+        </div>
+
+        <div id="thoughts-feed" class="masonry-grid" style="margin-top: 30px;">
+          <!-- JS will populate user thoughts and daily archived quotes here -->
         </div>
       </section>
 
-      <section id="view-quotes" class="view-section hidden">
-        <h2 class="section-title">Saved Thoughts</h2>
-        <div id="saved-quotes-container" class="quotes-grid"></div>
-      </section>
+      <!-- MASTER KEY CHANGE MODAL (Hidden) -->
+      <div id="modal-change-key" class="modal hidden">
+        <div class="modal-content">
+          <h3 class="modal-title">Change Master Key</h3>
+          <p class="subtitle" style="font-size: 0.85rem; margin-bottom: 20px;">This will safely download, decrypt, and re-encrypt your entire vault. Do not close the browser during this process.</p>
+          <input type="password" id="old-key" class="input-minimal" placeholder="Current Key">
+          <input type="password" id="new-key" class="input-minimal" placeholder="New Key">
+          <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Key">
+          <div class="modal-actions">
+            <button id="btn-confirm-key-change" class="btn-primary">Re-Encrypt Vault</button>
+            <button id="btn-cancel-key-change" class="btn-secondary">Cancel</button>
+          </div>
+        </div>
+      </div>
 
     </main>
   </div>
