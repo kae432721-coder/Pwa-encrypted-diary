@@ -1,26 +1,5 @@
 // --- QUOTE OF THE DAY ENGINE ---
-const sanctuaryQuotes = [
-  { id: 'q1', text: "The soul becomes dyed with the colour of its thoughts.", author: "Marcus Aurelius" },
-  { id: 'q2', text: "It is better to be feared than loved, if you cannot be both.", author: "Niccolò Machiavelli" },
-  { id: 'q3', text: "A book must be the axe for the frozen sea within us.", author: "Franz Kafka" },
-  { id: 'q4', text: "Everything you see I owe to spaghetti.", author: "Osamu Dazai" },
-  { id: 'q5', text: "Be like a lotus flower, which grows in the mud but remains untouched by it.", author: "Osho" },
-  { id: 'q6', text: "The unexamined life is not worth living.", author: "Socrates" },
-  { id: 'q7', text: "I think, therefore I am.", author: "René Descartes" },
-  { id: 'q8', text: "I am looking for an honest man.", author: "Diogenes" },
-  { id: 'q9', text: "Victory belongs to the most persevering.", author: "Napoleon Bonaparte" },
-  { id: 'q10', text: "There is nothing impossible to him who will try.", author: "Alexander the Great" },
-  { id: 'q11', text: "To live is to suffer, to survive is to find some meaning in the suffering.", author: "Friedrich Nietzsche" },
-  { id: 'q12', text: "First impressions are always unreliable.", author: "Franz Kafka" },
-  { id: 'q13', text: "Now I have neither happiness nor unhappiness. Everything passes.", author: "Osamu Dazai" },
-  { id: 'q14', text: "To find yourself, think for yourself.", author: "Socrates" },
-  { id: 'q15', text: "Ignorance, the root and stem of all evil.", author: "Plato" },
-  { id: 'q16', text: "He who has a why to live for can bear almost any how.", author: "Friedrich Nietzsche" },
-  { id: 'q17', text: "Pain and suffering are always inevitable for a large intelligence and a deep heart.", author: "Fyodor Dostoevsky" },
-  { id: 'q18', text: "The darker the night, the brighter the stars, the deeper the grief, the closer is God.", author: "Fyodor Dostoevsky" },
-  { id: 'q19', text: "You have power over your mind - not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
-  { id: 'q20', text: "Life is not a problem to be solved, but a mystery to be lived.", author: "Osho" }
-];
+
 
 const getDailyQuote = () => {
   const today = Math.floor(Date.now() / 86400000); 
@@ -52,6 +31,100 @@ const els = {
   toolbarBtns: document.querySelectorAll('.toolbar-btn'),
   entryBody: document.getElementById('entry-body')
 };
+
+// --- AUTHENTICATION & SESSION MANAGEMENT ---
+const btnUnlock = document.getElementById('btn-unlock');
+const passwordInput = document.getElementById('diary-password');
+
+// 1. SESSION CHECK: Are you already logged in for this browser session?
+if (sessionStorage.getItem('sanctuary_unlocked') === 'true') {
+  els.authScreen.classList.add('hidden');
+  els.mainWorkspace.classList.remove('hidden'); 
+}
+
+// 2. THE LOGIN / SETUP PROCESS
+if (btnUnlock && passwordInput) {
+  // Check if this is the user's very first time here
+  const isFirstTime = !localStorage.getItem('sanctuary_password');
+  
+  if (isFirstTime) {
+    passwordInput.placeholder = "Create your password...";
+    btnUnlock.textContent = "Set Password & Enter";
+  }
+
+  btnUnlock.addEventListener('click', () => {
+    const enteredText = passwordInput.value.trim();
+    if (!enteredText) return; // Don't allow empty passwords
+
+    if (isFirstTime) {
+      // FIRST TIME: Save their brand new password permanently
+      localStorage.setItem('sanctuary_password', enteredText);
+      unlockApp();
+    } else {
+      // RETURNING USER: Check against their saved password
+      const savedPassword = localStorage.getItem('sanctuary_password');
+      if (enteredText === savedPassword) {
+        unlockApp();
+      } else {
+        // Wrong password visual feedback
+        passwordInput.style.borderBottomColor = 'var(--danger-color)';
+        passwordInput.value = '';
+        passwordInput.placeholder = 'Incorrect password...';
+        
+        setTimeout(() => {
+          passwordInput.style.borderBottomColor = 'var(--border-light)';
+          passwordInput.placeholder = 'Enter your password...';
+        }, 2000);
+      }
+    }
+  });
+
+  // Allow pressing "Enter" on the keyboard
+  passwordInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnUnlock.click();
+    }
+  });
+}
+
+function unlockApp() {
+  // Give them a temporary 'Session' key
+  sessionStorage.setItem('sanctuary_unlocked', 'true');
+  
+  els.authScreen.style.opacity = '0';
+  els.authScreen.style.transition = 'opacity 0.8s ease';
+  
+  setTimeout(() => {
+    els.authScreen.classList.add('hidden');
+    els.quoteScreen.classList.remove('hidden');
+    
+    els.quoteScreen.style.opacity = '0';
+    setTimeout(() => els.quoteScreen.style.opacity = '1', 50);
+    els.quoteScreen.style.transition = 'opacity 0.8s ease';
+    
+    // Automatically change the UI for next time they log out
+    passwordInput.placeholder = "Enter your password...";
+    btnUnlock.textContent = "Open Journal";
+    passwordInput.value = '';
+    
+    // Refresh the page slightly to ensure First-Time setup changes UI immediately
+    if (!localStorage.getItem('sanctuary_setup_complete')) {
+       localStorage.setItem('sanctuary_setup_complete', 'true');
+       location.reload();
+    }
+  }, 800);
+}
+
+// --- LOCK VAULT TOGGLE ---
+const btnLockDiary = document.getElementById('btn-lock-diary');
+if (btnLockDiary) {
+  btnLockDiary.addEventListener('click', () => { 
+    // Erase temporary memory and reset to lock screen
+    sessionStorage.removeItem('sanctuary_unlocked');
+    window.location.reload(); 
+  });
+}
 
 // --- THEME ENGINE ---
 const toggleTheme = () => {
@@ -89,12 +162,6 @@ if (els.btnNewEntry) {
   });
 }
 
-// --- LOCK VAULT TOGGLE ---
-const btnLockDiary = document.getElementById('btn-lock-diary');
-if (btnLockDiary) {
-  btnLockDiary.addEventListener('click', () => { window.location.reload(); });
-}
-
 // --- WORKSPACE NAVIGATION ---
 els.navItems.forEach(item => {
   item.addEventListener('click', (e) => {
@@ -125,8 +192,6 @@ els.toolbarBtns.forEach(btn => {
     if (typeof window.triggerModuleAutosave === 'function') window.triggerModuleAutosave();
   });
 });
-
-
 
 // --- QUOTE LIKE BUTTON LOGIC ---
 if (els.btnLikeQuote) {
@@ -326,7 +391,6 @@ const initSnowAndWind = () => {
         ctx.moveTo(flake.x, flake.y);
         ctx.lineTo(flake.x - (vx * 1.2), flake.y - (vy * 1.2));
         
-        // FIXED TYPO: Properly injected variables so they render correctly
         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
         
         ctx.lineWidth = flake.snowRadius;
@@ -463,8 +527,42 @@ if (birthdateInput && ageInput) {
     ageInput.value = age;
   });
 }
+
+// --- CHANGE PASSWORD (SETTINGS PAGE) ---
+const btnConfirmKeyChange = document.getElementById('btn-confirm-key-change');
+const oldKeyInput = document.getElementById('old-key');
+const newKeyInput = document.getElementById('new-key');
+const newKeyConfirm = document.getElementById('new-key-confirm');
+
+if (btnConfirmKeyChange) {
+  btnConfirmKeyChange.addEventListener('click', () => {
+    const currentSaved = localStorage.getItem('sanctuary_password');
+    
+    if (oldKeyInput.value !== currentSaved) {
+      alert('Current password is incorrect.');
+      return;
+    }
+    if (newKeyInput.value !== newKeyConfirm.value) {
+      alert('New passwords do not match.');
+      return;
+    }
+    if (newKeyInput.value.trim() === '') {
+      alert('Password cannot be empty.');
+      return;
+    }
+    
+    // Save the new password
+    localStorage.setItem('sanctuary_password', newKeyInput.value.trim());
+    alert('Password successfully updated!');
+    
+    // Clear inputs
+    oldKeyInput.value = '';
+    newKeyInput.value = '';
+    newKeyConfirm.value = '';
+  });
+}
+
 // --- CSS OVERRIDE: FORCE SLEEK DELETE BUTTONS ---
-// This injects the styles dynamically, bypassing the browser's CSS cache
 const styleFix = document.createElement('style');
 styleFix.innerHTML = `
   #lists-container button,
@@ -488,4 +586,3 @@ styleFix.innerHTML = `
   }
 `;
 document.head.appendChild(styleFix);
-
