@@ -1,29 +1,27 @@
-// --- QUOTE OF THE DAY ENGINE (Curated Philosophy) ---
+// --- QUOTE OF THE DAY ENGINE ---
 const sanctuaryQuotes = [
-  { text: "The soul becomes dyed with the colour of its thoughts.", author: "Marcus Aurelius" },
-  { text: "Pain and suffering are always inevitable for a large intelligence and a deep heart.", author: "Fyodor Dostoevsky" },
-  { text: "He who has a why to live for can bear almost any how.", author: "Friedrich Nietzsche" },
-  { text: "A book must be the axe for the frozen sea within us.", author: "Franz Kafka" },
-  { text: "Everything you see I owe to spaghetti.", author: "Osamu Dazai" },
-  { text: "Be like a lotus flower, which grows in the mud but remains untouched by it.", author: "Osho" },
-  { text: "The unexamined life is not worth living.", author: "Socrates" },
-  { text: "Ignorance, the root and stem of all evil.", author: "Plato" },
-  { text: "I think, therefore I am.", author: "René Descartes" },
-  { text: "It is better to be feared than loved, if you cannot be both.", author: "Niccolò Machiavelli" },
-  { text: "I am looking for an honest man.", author: "Diogenes" },
-  { text: "Victory belongs to the most persevering.", author: "Napoleon Bonaparte" },
-  { text: "There is nothing impossible to him who will try.", author: "Alexander the Great" },
-  { text: "To live is to suffer, to survive is to find some meaning in the suffering.", author: "Friedrich Nietzsche" },
-  { text: "Life is not a problem to be solved, but a mystery to be lived.", author: "Osho" },
-  { text: "The darker the night, the brighter the stars, the deeper the grief, the closer is God.", author: "Fyodor Dostoevsky" },
-  { text: "You have power over your mind - not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
-  { text: "First impressions are always unreliable.", author: "Franz Kafka" },
-  { text: "Now I have neither happiness nor unhappiness. Everything passes.", author: "Osamu Dazai" },
-  { text: "To find yourself, think for yourself.", author: "Socrates" }
-  // Expandable to 100 quotes as needed; the engine scales automatically.
+  { id: 'q1', text: "The soul becomes dyed with the colour of its thoughts.", author: "Marcus Aurelius" },
+  { id: 'q2', text: "It is better to be feared than loved, if you cannot be both.", author: "Niccolò Machiavelli" },
+  { id: 'q3', text: "A book must be the axe for the frozen sea within us.", author: "Franz Kafka" },
+  { id: 'q4', text: "Everything you see I owe to spaghetti.", author: "Osamu Dazai" },
+  { id: 'q5', text: "Be like a lotus flower, which grows in the mud but remains untouched by it.", author: "Osho" },
+  { id: 'q6', text: "The unexamined life is not worth living.", author: "Socrates" },
+  { id: 'q7', text: "I think, therefore I am.", author: "René Descartes" },
+  { id: 'q8', text: "I am looking for an honest man.", author: "Diogenes" },
+  { id: 'q9', text: "Victory belongs to the most persevering.", author: "Napoleon Bonaparte" },
+  { id: 'q10', text: "There is nothing impossible to him who will try.", author: "Alexander the Great" },
+  { id: 'q11', text: "To live is to suffer, to survive is to find some meaning in the suffering.", author: "Friedrich Nietzsche" },
+  { id: 'q12', text: "First impressions are always unreliable.", author: "Franz Kafka" },
+  { id: 'q13', text: "Now I have neither happiness nor unhappiness. Everything passes.", author: "Osamu Dazai" },
+  { id: 'q14', text: "To find yourself, think for yourself.", author: "Socrates" },
+  { id: 'q15', text: "Ignorance, the root and stem of all evil.", author: "Plato" },
+  { id: 'q16', text: "He who has a why to live for can bear almost any how.", author: "Friedrich Nietzsche" },
+  { id: 'q17', text: "Pain and suffering are always inevitable for a large intelligence and a deep heart.", author: "Fyodor Dostoevsky" },
+  { id: 'q18', text: "The darker the night, the brighter the stars, the deeper the grief, the closer is God.", author: "Fyodor Dostoevsky" },
+  { id: 'q19', text: "You have power over your mind - not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
+  { id: 'q20', text: "Life is not a problem to be solved, but a mystery to be lived.", author: "Osho" }
 ];
 
-// Calculate quote based on current date (Changes exactly at midnight local time)
 const getDailyQuote = () => {
   const today = Math.floor(Date.now() / 86400000); 
   const quoteIndex = today % sanctuaryQuotes.length;
@@ -38,10 +36,7 @@ const els = {
   
   sidebar: document.getElementById('sidebar'),
   btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
-  
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
-  iconMoon: document.getElementById('icon-moon'),
-  iconSun: document.getElementById('icon-sun'),
   
   navItems: document.querySelectorAll('.nav-item'),
   viewSections: document.querySelectorAll('.view-section'),
@@ -50,29 +45,22 @@ const els = {
   btnEnterSanctuary: document.getElementById('btn-enter-sanctuary'),
   quoteText: document.getElementById('daily-quote-text'),
   quoteAuthor: document.getElementById('daily-quote-author'),
+  btnLikeQuote: document.getElementById('btn-like-quote'),
   
   btnNewEntry: document.getElementById('btn-new-entry'),
   toolbarBtns: document.querySelectorAll('.toolbar-btn'),
   entryBody: document.getElementById('entry-body')
 };
 
-// --- THEME ENGINE (Day / Night Sanctuary) ---
+// --- THEME ENGINE ---
 if (els.btnThemeToggle) {
   els.btnThemeToggle.addEventListener('click', () => {
     const currentTheme = document.body.getAttribute('data-theme');
-    if (currentTheme === 'light') {
-      document.body.setAttribute('data-theme', 'dark');
-      els.iconMoon.classList.add('hidden');
-      els.iconSun.classList.remove('hidden');
-    } else {
-      document.body.setAttribute('data-theme', 'light');
-      els.iconSun.classList.add('hidden');
-      els.iconMoon.classList.remove('hidden');
-    }
+    document.body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
   });
 }
 
-// --- DYNAMIC SIDEBAR CONTROLS ---
+// --- DYNAMIC SIDEBAR CONTROLS (Full Slide) ---
 if (els.btnToggleSidebar) {
   els.btnToggleSidebar.addEventListener('click', () => {
     const isExpanded = els.sidebar.classList.contains('sidebar-expanded');
@@ -86,7 +74,6 @@ if (els.btnToggleSidebar) {
   });
 }
 
-// Auto-collapse sidebar when starting a new journal page for a distraction-free canvas
 if (els.btnNewEntry) {
   els.btnNewEntry.addEventListener('click', () => {
     els.sidebar.classList.remove('sidebar-expanded');
@@ -97,36 +84,28 @@ if (els.btnNewEntry) {
 // --- LOCK VAULT TOGGLE ---
 const btnLockDiary = document.getElementById('btn-lock-diary');
 if (btnLockDiary) {
-  btnLockDiary.addEventListener('click', () => {
-    window.location.reload(); // Instantly wipes memory state and returns to encrypted lock screen
-  });
+  btnLockDiary.addEventListener('click', () => { window.location.reload(); });
 }
 
 // --- WORKSPACE NAVIGATION ---
 els.navItems.forEach(item => {
   item.addEventListener('click', (e) => {
-    // Manage active states
     els.navItems.forEach(nav => nav.classList.remove('active'));
     e.currentTarget.classList.add('active');
     
-    // Manage views
     els.viewSections.forEach(section => section.classList.add('hidden'));
     const targetId = e.currentTarget.getAttribute('data-target');
     const targetSection = document.getElementById(targetId);
-    if (targetSection) {
-      targetSection.classList.remove('hidden');
-    }
+    if (targetSection) targetSection.classList.remove('hidden');
   });
 });
 
-// --- HYBRID TEXT EDITOR ENGINE (Markdown + Toolbar) ---
-// Allows the user to select text and format it via the toolbar
+// --- HYBRID EDITOR & LIVE MARKDOWN ---
 els.toolbarBtns.forEach(btn => {
   btn.addEventListener('click', (e) => {
-    e.preventDefault(); // Prevent focus loss
+    e.preventDefault();
     const format = e.currentTarget.getAttribute('data-format');
     const textarea = els.entryBody;
-    
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const text = textarea.value;
@@ -135,20 +114,15 @@ els.toolbarBtns.forEach(btn => {
     
     if (format === 'bold') replacement = `**${selectedText || 'bold text'}**`;
     if (format === 'italic') replacement = `*${selectedText || 'italic text'}*`;
+    if (format === 'h2') replacement = `\n## ${selectedText || 'Header'}`;
     if (format === 'bullet') replacement = `\n- ${selectedText || 'list item'}`;
     
-    // Inject formatting and reset cursor position
     textarea.value = text.substring(0, start) + replacement + text.substring(end);
     textarea.focus();
-    
-    // Manually trigger the autosave function (which will be defined in modules.js)
-    if (typeof window.triggerModuleAutosave === 'function') {
-      window.triggerModuleAutosave();
-    }
+    if (typeof window.triggerModuleAutosave === 'function') window.triggerModuleAutosave();
   });
 });
 
-// Allow tab key inside textarea without losing focus
 els.entryBody.addEventListener('keydown', function(e) {
   if (e.key === 'Tab') {
     e.preventDefault();
@@ -159,40 +133,25 @@ els.entryBody.addEventListener('keydown', function(e) {
   }
 });
 
-// --- INITIALIZATION & UI SETUP ---
-const initUI = () => {
-  if (els.currentDateDisplay) {
-    const now = new Date();
-    els.currentDateDisplay.innerText = now.toLocaleDateString('en-GB', { 
-      weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' 
-    });
-  }
-
-  if (els.quoteText && els.quoteAuthor) {
-    const dailyQuote = getDailyQuote();
-    els.quoteText.innerText = `"${dailyQuote.text}"`;
-    els.quoteAuthor.innerText = `— ${dailyQuote.author}`;
-    
-    // Store daily quote globally so modules.js can archive it into the "Thoughts" feed
-    window.currentDailyQuote = dailyQuote;
-  }
-};
-
-// Transition from Quote to Workspace
-if (els.btnEnterSanctuary) {
-  els.btnEnterSanctuary.addEventListener('click', () => {
-    els.quoteScreen.style.opacity = '0';
-    setTimeout(() => {
-      els.quoteScreen.classList.add('hidden');
-      els.mainWorkspace.classList.remove('hidden');
-      els.mainWorkspace.style.opacity = '0';
-      setTimeout(() => els.mainWorkspace.style.opacity = '1', 50);
-      els.mainWorkspace.style.transition = 'opacity 0.8s ease';
-    }, 1000);
+// --- QUOTE LIKE BUTTON LOGIC ---
+if (els.btnLikeQuote) {
+  els.btnLikeQuote.addEventListener('click', () => {
+    els.btnLikeQuote.classList.toggle('liked');
+    if (els.btnLikeQuote.classList.contains('liked')) {
+      els.btnLikeQuote.style.color = '#E06C75';
+      els.btnLikeQuote.style.fill = '#E06C75';
+    } else {
+      els.btnLikeQuote.style.color = 'var(--text-muted)';
+      els.btnLikeQuote.style.fill = 'none';
+    }
+    // Flag to be checked by modules.js during archival
+    if (window.currentDailyQuote) {
+      window.currentDailyQuote.liked = els.btnLikeQuote.classList.contains('liked');
+    }
   });
 }
 
-// Orbs Particle Engine (Kept from Phase 1, highly optimized)
+// --- ORBS BACKGROUND ENGINE (Auth Screen) ---
 const initOrbs = () => {
   const canvas = document.getElementById('orbs-canvas');
   if (!canvas) return;
@@ -248,5 +207,102 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
+// --- SNOW & WIND PHYSICS ENGINE (Writing Board) ---
+const initSnowAndWind = () => {
+  const canvas = document.getElementById('snow-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  const resizeCanvas = () => {
+    const container = canvas.parentElement;
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+  };
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  let snowflakes = [];
+  let wind = 0; 
+  let targetWind = 0;
+
+  for (let i = 0; i < 60; i++) {
+    snowflakes.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      radius: Math.random() * 2 + 0.5,
+      speedY: Math.random() * 1 + 0.5,
+      opacity: Math.random() * 0.5 + 0.3
+    });
+  }
+
+  // Shifts wind velocity target randomly every 4 seconds
+  setInterval(() => {
+    targetWind = (Math.random() * 4) - 2; 
+  }, 4000);
+
+  const animateSnow = () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.3)';
+
+    // Interpolate wind for smooth directional shifts
+    wind += (targetWind - wind) * 0.02;
+
+    snowflakes.forEach(flake => {
+      ctx.beginPath();
+      ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
+      ctx.globalAlpha = flake.opacity;
+      ctx.fill();
+
+      flake.y += flake.speedY;
+      flake.x += wind + (Math.random() * 0.5 - 0.25); 
+
+      if (flake.y > canvas.height) {
+        flake.y = -5;
+        flake.x = Math.random() * canvas.width;
+      }
+      if (flake.x > canvas.width) flake.x = 0;
+      if (flake.x < 0) flake.x = canvas.width;
+    });
+
+    ctx.globalAlpha = 1;
+    requestAnimationFrame(animateSnow);
+  };
+  animateSnow();
+};
+
+// --- INITIALIZATION ---
+const initUI = () => {
+  if (els.currentDateDisplay) {
+    const now = new Date();
+    els.currentDateDisplay.innerText = now.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  if (els.quoteText && els.quoteAuthor) {
+    const dailyQuote = getDailyQuote();
+    els.quoteText.innerText = `"${dailyQuote.text}"`;
+    els.quoteAuthor.innerText = `— ${dailyQuote.author}`;
+    window.currentDailyQuote = dailyQuote;
+    window.currentDailyQuote.liked = false;
+  }
+};
+
+if (els.btnEnterSanctuary) {
+  els.btnEnterSanctuary.addEventListener('click', () => {
+    els.quoteScreen.style.opacity = '0';
+    setTimeout(() => {
+      els.quoteScreen.classList.add('hidden');
+      els.mainWorkspace.classList.remove('hidden');
+      els.mainWorkspace.style.opacity = '0';
+      setTimeout(() => els.mainWorkspace.style.opacity = '1', 50);
+      els.mainWorkspace.style.transition = 'opacity 0.8s ease';
+      
+      // Re-trigger resize for canvas once workspace is visible
+      window.dispatchEvent(new Event('resize'));
+    }, 1000);
+  });
+}
+
 initUI();
 initOrbs();
+initSnowAndWind();
