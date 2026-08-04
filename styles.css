@@ -164,13 +164,18 @@ body {
 
 .title-input { background: transparent; border: none; outline: none; font-family: var(--font-reading); font-size: 3rem; font-weight: 600; color: var(--text-main); width: 100%; margin-bottom: 10px; position: relative; z-index: 10; }
 
-.journal-textarea, .card-body {
+/* Keep the 75ch limit only on cards, let the main journal go full width */
+.card-body {
   font-family: var(--font-reading); font-size: 1.3rem; line-height: 1.8; max-width: 75ch; color: var(--text-main); 
 }
+
 .journal-textarea { 
+  font-family: var(--font-reading); font-size: 1.3rem; line-height: 1.8; color: var(--text-main);
+  max-width: 100%; /* This forces it to use the entire screen width */
   flex: 1; width: 100%; background: transparent; border: none; outline: none; 
   resize: none; padding-bottom: 60px; position: relative; z-index: 10; 
 }
+
 .journal-textarea::placeholder { color: var(--text-muted); opacity: 0.4; font-style: italic; }
 
 /* Snow and Wind Canvas (Forced strictly to the background) */
