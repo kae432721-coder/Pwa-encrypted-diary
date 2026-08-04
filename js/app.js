@@ -217,7 +217,7 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
-// ---// --- REFINED SNOW & WIND PHYSICS ENGINE ---
+// --- ULTRA-REAL SNOW PHYSICS ENGINE ---
 const initSnowAndWind = () => {
   const canvas = document.getElementById('snow-canvas');
   if (!canvas) return;
@@ -232,54 +232,65 @@ const initSnowAndWind = () => {
   window.addEventListener('resize', resizeCanvas);
 
   let snowflakes = [];
-  let wind = 0; 
+  let globalWind = 0; 
   let targetWind = 0;
 
-  // Increased particle count for a dense, grainy snowfall
-  for (let i = 0; i < 160; i++) { 
+  // Building the volumetric 3D field
+  for (let i = 0; i < 200; i++) { 
+    const depth = Math.random() * 100 + 1; // Z-axis: 1 (background) to 100 (foreground)
+    
     snowflakes.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 2 + 0.5, // Depth variation
-      speedY: Math.random() * 2.5 + 1.5, // Faster, definitive downward fall
-      opacity: Math.random() * 0.7 + 0.2, // Higher visibility
-      sway: Math.random() * Math.PI * 2, // Individual flutter offset
-      swaySpeed: Math.random() * 0.02 + 0.01 // Speed of the flutter
+      depth: depth,
+      // Optics: Closer flakes are larger
+      radius: (depth / 100) * 1.8 + 0.4, 
+      // Gravity: Closer flakes appear to fall faster (Parallax)
+      speedY: (depth / 100) * 1.5 + 0.4, 
+      sway: Math.random() * Math.PI * 2, 
+      swaySpeed: Math.random() * 0.015 + 0.005 
     });
   }
 
-  // Wind shifts occasionally, but gravity remains dominant
+  // Global weather system: Wind changes gradually and applies to all particles
   setInterval(() => {
-    targetWind = (Math.random() * 2) - 1; 
-  }, 4000);
+    targetWind = (Math.random() * 3) - 1.5; 
+  }, 8000);
 
   const animateSnow = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     
-    // High-contrast frosted blue for light mode, crisp white for dark mode
-    ctx.fillStyle = isDark ? 'rgba(240, 248, 255, 0.65)' : 'rgba(130, 160, 200, 0.75)';
+    // Day mode: Frosted slate-blue for contrast. Night mode: Crisp white.
+    ctx.fillStyle = isDark ? '#ffffff' : '#b3c3d4';
 
-    wind += (targetWind - wind) * 0.02; // Smooth wind transitions
+    // Smooth transition of the global wind vector
+    globalWind += (targetWind - globalWind) * 0.005; 
 
     snowflakes.forEach(flake => {
       ctx.beginPath();
       ctx.arc(flake.x, flake.y, flake.radius, 0, Math.PI * 2);
-      ctx.globalAlpha = flake.opacity;
+      
+      // Depth of Field Optics: Closer flakes are more opaque
+      const baseOpacity = isDark ? 0.9 : 0.7;
+      ctx.globalAlpha = (flake.depth / 100) * baseOpacity + 0.1;
       ctx.fill();
 
-      // Update position: Gravity + Wind + Individual flutter
+      // Kinematics
       flake.y += flake.speedY;
       flake.sway += flake.swaySpeed;
-      flake.x += wind + Math.sin(flake.sway) * 0.6; 
 
-      // Seamlessly wrap particles back to the top
+      // The micro-flutter is restricted to 0.15, meaning the globalWind dictates direction.
+      // The wind pushes closer flakes horizontally faster, cementing the 3D parallax effect.
+      const microFlutter = Math.sin(flake.sway) * 0.15;
+      flake.x += (globalWind * (flake.depth / 50)) + microFlutter; 
+
+      // Infinite volumetric looping
       if (flake.y > canvas.height) {
-        flake.y = -5;
+        flake.y = -10;
         flake.x = Math.random() * canvas.width;
       }
       
-      // Wrap horizontally for strong winds
       if (flake.x > canvas.width + 10) flake.x = -10;
       if (flake.x < -10) flake.x = canvas.width + 10;
     });
