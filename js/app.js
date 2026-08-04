@@ -240,46 +240,36 @@ const initSnowAndWind = () => {
   window.addEventListener('resize', resizeCanvas);
 
   let particles = [];
-  let globalWind = 2; 
-  let targetWind = 2;
+  let fallenPetals = []; // Memory bank for accumulated cherry blossoms
+  let globalWind = 1.5; 
+  let targetWind = 1.5;
 
-  // INCREASED DENSITY: 1600 particles for Dark Mode Blizzard / Light Mode Sakura
-  for (let i = 0; i < 1600; i++) { 
+  // Render 1200 max particles
+  for (let i = 0; i < 1200; i++) { 
     const depth = Math.random() * 100 + 1; 
     particles.push({
       x: Math.random() * (window.innerWidth || 1000), 
       y: Math.random() * (window.innerHeight || 1000),
       depth: depth,
       
-      // Blizzard Properties
+      // Blizzard Properties: Slower fall (mass) and smaller radius
       snowRadius: (depth / 100) * 0.6 + 0.15, 
-      snowMass: (depth / 100) * 4.5 + 2.0, // Faster falling
+      snowMass: (depth / 100) * 2.0 + 1.2, 
       
       // Sakura Properties
       petalSize: (depth / 100) * 4 + 1.5,
-      sakuraMass: (depth / 100) * 1.0 + 0.5, // Gentle drifting
+      sakuraMass: (depth / 100) * 0.8 + 0.4, 
       angle: Math.random() * Math.PI * 2,
       spin: Math.random() * Math.PI * 2,
       spinSpeed: (Math.random() - 0.5) * 0.08,
-      color: Math.random() > 0.4 ? '255, 183, 197' : '255, 230, 235' // Mix of pink and pale white
+      color: Math.random() > 0.4 ? '255, 183, 197' : '255, 230, 235'
     });
   }
 
+  // Wind now shifts extremely slowly (every 30 seconds) and gradually
   setInterval(() => {
-    targetWind = (Math.random() * 4) - 2; 
-  }, 12000);
-
-  // Pre-warm simulation
-  for (let i = 0; i < 300; i++) {
-    globalWind += (targetWind - globalWind) * 0.005; 
-    particles.forEach(p => {
-      p.y += p.snowMass; 
-      p.x += globalWind * (p.snowMass * 0.5); 
-      if (p.y > window.innerHeight) p.y = -10;
-      if (p.x > window.innerWidth + 50) p.x = -50;
-      if (p.x < -50) p.x = window.innerWidth + 50;
-    });
-  }
+    targetWind = (Math.random() * 2.5) - 1.25; 
+  }, 30000);
 
   const animateWeather = () => {
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
@@ -289,7 +279,10 @@ const initSnowAndWind = () => {
     const lightY = logicalHeight * 0.15;
     const lightRadius = 600; 
 
-    // --- DARK MODE: PHOTOREALISTIC BLIZZARD ---
+    // Ultra-slow transition for sweeping, steady winds
+    globalWind += (targetWind - globalWind) * 0.001; 
+
+    // --- DARK MODE: PHOTOREALISTIC SNOWFALL ---
     if (isDark) {
       // Draw Streetlamp Glow
       const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightRadius);
@@ -307,9 +300,7 @@ const initSnowAndWind = () => {
       ctx.fill();
       ctx.shadowBlur = 0; 
 
-      globalWind += (targetWind - globalWind) * 0.005; 
-
-      particles.forEach(flake => {
+      particles.forEach((flake, index) => {
         let r = 255, g = 255, b = 255;
         let baseOpacity = (flake.depth / 100) * 0.9 + 0.1;
 
@@ -324,12 +315,13 @@ const initSnowAndWind = () => {
           baseOpacity = Math.min(1, baseOpacity + (intensity * 0.7));
         }
 
-        const vx = globalWind * (flake.snowMass * 0.5);
+        const vx = globalWind * (flake.snowMass * 0.6);
         const vy = flake.snowMass;
 
         ctx.beginPath();
         ctx.moveTo(flake.x, flake.y);
-        ctx.lineTo(flake.x - (vx * 2), flake.y - (vy * 2));
+        // Reduced streak multiplier to look like snow, not rain
+        ctx.lineTo(flake.x - (vx * 1.2), flake.y - (vy * 1.2));
         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
         ctx.lineWidth = flake.snowRadius;
         ctx.lineCap = 'round';
@@ -343,25 +335,36 @@ const initSnowAndWind = () => {
         if (flake.x < -50) flake.x = logicalWidth + 50;
       });
     } 
-    // --- LIGHT MODE: TUMBLING SAKURA BLOSSOMS ---
+    // --- LIGHT MODE: ACCUMULATING SAKURA BLOSSOMS ---
     else {
-      // Wind shifts much slower for gentle drifting
-      globalWind += (targetWind - globalWind) * 0.002; 
-      
-      particles.forEach(petal => {
+      // 1. Draw Accumulated Petals on the Ground
+      fallenPetals.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // 2. Draw Active Falling Petals
+      particles.forEach((petal, index) => {
+        // Limit petal count to 350 for a cleaner look
+        if (index > 350) return; 
+
         const baseOpacity = (petal.depth / 100) * 0.7 + 0.15;
-        const vx = (globalWind * petal.sakuraMass * 0.4) + (Math.sin(petal.spin) * 0.5);
+        // Petals catch more wind than snow
+        const vx = (globalWind * petal.sakuraMass * 1.2) + (Math.sin(petal.spin) * 0.5);
         const vy = petal.sakuraMass;
 
         ctx.save();
         ctx.translate(petal.x, petal.y);
         ctx.rotate(petal.angle);
-        
-        // Scale based on sine wave to simulate 3D tumbling/flipping
-        ctx.scale(Math.sin(petal.spin), 1);
+        ctx.scale(Math.sin(petal.spin), 1); // 3D tumbling
         
         ctx.beginPath();
-        // Draw teardrop/ellipse petal shape
         ctx.ellipse(0, 0, petal.petalSize, petal.petalSize / 2, 0, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${petal.color}, ${baseOpacity})`;
         ctx.fill();
@@ -372,7 +375,31 @@ const initSnowAndWind = () => {
         petal.angle += 0.01;
         petal.spin += petal.spinSpeed;
         
-        if (petal.y > logicalHeight + 20) { petal.y = -20; petal.x = Math.random() * logicalWidth; }
+        // When petal hits the bottom edge
+        if (petal.y > logicalHeight - (Math.random() * 20)) { 
+          // Add to accumulation array (cap at 600 petals to prevent lag)
+          if (fallenPetals.length < 600) {
+            fallenPetals.push({
+              x: petal.x,
+              y: petal.y,
+              size: petal.petalSize,
+              angle: petal.angle,
+              color: petal.color,
+              opacity: baseOpacity
+            });
+          } else {
+            // Remove the oldest petal and add the new one
+            fallenPetals.shift();
+            fallenPetals.push({
+              x: petal.x, y: petal.y, size: petal.petalSize, angle: petal.angle, color: petal.color, opacity: baseOpacity
+            });
+          }
+
+          // Reset falling petal to the top
+          petal.y = -20; 
+          petal.x = Math.random() * logicalWidth; 
+        }
+
         if (petal.x > logicalWidth + 50) petal.x = -50;
         if (petal.x < -50) petal.x = logicalWidth + 50;
       });
