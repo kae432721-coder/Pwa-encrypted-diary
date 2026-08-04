@@ -225,19 +225,26 @@ const initSnowAndWind = () => {
   let dpi = window.devicePixelRatio || 1;
   let logicalWidth = 0;
   let logicalHeight = 0;
-  let fallenPetals = []; // Memory bank for accumulated cherry blossoms
+  let fallenPetals = []; 
 
   const resizeCanvas = () => {
-    const container = canvas.parentElement;
+    // FIXING THE CUTOUT BUG: Force canvas to break out of container and cover entire screen
+    canvas.style.position = 'fixed';
+    canvas.style.top = '0';
+    canvas.style.left = '0';
+    canvas.style.width = '100vw';
+    canvas.style.height = '100vh';
+    canvas.style.zIndex = '0'; // Behind your text
+    canvas.style.pointerEvents = 'none'; // So you can still click the editor
+
     dpi = window.devicePixelRatio || 1;
-    logicalWidth = container.clientWidth;
-    logicalHeight = container.clientHeight;
+    logicalWidth = window.innerWidth;
+    logicalHeight = window.innerHeight;
     
     canvas.width = logicalWidth * dpi;
     canvas.height = logicalHeight * dpi;
     ctx.scale(dpi, dpi);
     
-    // Clear fallen petals if screen resizes drastically so they don't float mid-air
     fallenPetals = []; 
   };
   resizeCanvas();
@@ -247,15 +254,14 @@ const initSnowAndWind = () => {
   let globalWind = 1.5; 
   let targetWind = 1.5;
 
-  // Render 1200 max particles
   for (let i = 0; i < 1200; i++) { 
     const depth = Math.random() * 100 + 1; 
     particles.push({
-      x: Math.random() * (window.innerWidth || 1000), 
-      y: Math.random() * (window.innerHeight || 1000),
+      x: Math.random() * logicalWidth, 
+      y: Math.random() * logicalHeight,
       depth: depth,
       
-      // Blizzard Properties: Slower fall (mass) and smaller radius
+      // Blizzard Properties
       snowRadius: (depth / 100) * 0.6 + 0.15, 
       snowMass: (depth / 100) * 2.0 + 1.2, 
       
@@ -269,20 +275,18 @@ const initSnowAndWind = () => {
     });
   }
 
-  // Wind shifts extremely slowly (every 30 seconds)
   setInterval(() => {
     targetWind = (Math.random() * 2.5) - 1.25; 
   }, 30000);
 
-  // Pre-warm simulation
   for (let i = 0; i < 300; i++) {
     globalWind += (targetWind - globalWind) * 0.005; 
     particles.forEach(p => {
       p.y += p.snowMass; 
       p.x += globalWind * (p.snowMass * 0.5); 
-      if (p.y > window.innerHeight) p.y = -10;
-      if (p.x > window.innerWidth + 50) p.x = -50;
-      if (p.x < -50) p.x = window.innerWidth + 50;
+      if (p.y > logicalHeight) p.y = -10;
+      if (p.x > logicalWidth + 50) p.x = -50;
+      if (p.x < -50) p.x = logicalWidth + 50;
     });
   }
 
@@ -292,21 +296,18 @@ const initSnowAndWind = () => {
     
     const lightX = logicalWidth * 0.35;
     const lightY = logicalHeight * 0.15;
-    const lightRadius = 600; 
+    const lightRadius = 800; // Wider light throw since the canvas is bigger
 
-    // Ultra-slow transition for sweeping, steady winds
     globalWind += (targetWind - globalWind) * 0.001; 
 
     // --- DARK MODE: PHOTOREALISTIC SNOWFALL ---
     if (isDark) {
-      // Draw Streetlamp Glow
       const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightRadius);
       gradient.addColorStop(0, 'rgba(255, 200, 100, 0.25)'); 
       gradient.addColorStop(1, 'rgba(255, 200, 100, 0)');
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, logicalWidth, logicalHeight);
       
-      // Draw Bulb Core
       ctx.beginPath();
       ctx.arc(lightX, lightY, 4, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255, 240, 200, 1)';
@@ -316,8 +317,9 @@ const initSnowAndWind = () => {
       ctx.shadowBlur = 0; 
 
       particles.forEach((flake, index) => {
-        let r = 255, g = 255, b = 255;
-        let baseOpacity = (flake.depth / 100) * 0.9 + 0.1;
+        // FIXED COLOR ENGINE: Base color is Deep Icy Blue, interpolating to warm yellow
+        let r = 162, g = 180, b = 199; 
+        let baseOpacity = (flake.depth / 100) * 0.8 + 0.2;
 
         const dx = flake.x - lightX;
         const dy = flake.y - lightY;
@@ -325,9 +327,11 @@ const initSnowAndWind = () => {
 
         if (distance < lightRadius) {
           const intensity = 1 - (distance / lightRadius);
-          g = Math.floor(255 - (55 * intensity)); 
-          b = Math.floor(255 - (155 * intensity)); 
-          baseOpacity = Math.min(1, baseOpacity + (intensity * 0.7));
+          // Interpolate to Warm Streetlamp Amber (255, 220, 120)
+          r = Math.min(255, Math.floor(r + (255 - r) * (intensity * 1.5)));
+          g = Math.min(255, Math.floor(g + (220 - g) * (intensity * 1.5)));
+          b = Math.min(255, Math.floor(b + (120 - b) * (intensity * 1.5)));
+          baseOpacity = Math.min(1, baseOpacity + (intensity * 0.8));
         }
 
         const vx = globalWind * (flake.snowMass * 0.6);
@@ -336,7 +340,10 @@ const initSnowAndWind = () => {
         ctx.beginPath();
         ctx.moveTo(flake.x, flake.y);
         ctx.lineTo(flake.x - (vx * 1.2), flake.y - (vy * 1.2));
-        ctx.strokeStyle = `rgba(${r}, g, b, ${baseOpacity})`;
+        
+        // FIXED TYPO: Properly injected variables so they render correctly
+        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
+        
         ctx.lineWidth = flake.snowRadius;
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -351,7 +358,9 @@ const initSnowAndWind = () => {
     } 
     // --- LIGHT MODE: ACCUMULATING SAKURA BLOSSOMS ---
     else {
-      // 1. Draw Accumulated Petals on the Ground
+      // The Stationary Virtual Margin (Floor) - Piles up 60px above the bottom of the screen
+      const floorY = logicalHeight - 60; 
+
       fallenPetals.forEach(p => {
         ctx.save();
         ctx.translate(p.x, p.y);
@@ -363,9 +372,7 @@ const initSnowAndWind = () => {
         ctx.restore();
       });
 
-      // 2. Draw Active Falling Petals
       particles.forEach((petal, index) => {
-        // Limit active falling petal count to 350 for a cleaner look
         if (index > 350) return; 
 
         const baseOpacity = (petal.depth / 100) * 0.7 + 0.15;
@@ -388,17 +395,11 @@ const initSnowAndWind = () => {
         petal.angle += 0.01;
         petal.spin += petal.spinSpeed;
         
-        // Accumulation Engine: Creates a thick, randomized bed up to 50px high
-        if (petal.y > logicalHeight - (Math.random() * 50)) { 
-          // Massive 2000 limit for a deeply piled look
+        // Accumulate accurately on the Virtual Margin instead of off-screen
+        if (petal.y > floorY - (Math.random() * 40)) { 
           if (fallenPetals.length < 2000) {
             fallenPetals.push({
-              x: petal.x,
-              y: petal.y,
-              size: petal.petalSize,
-              angle: petal.angle,
-              color: petal.color,
-              opacity: Math.min(baseOpacity + 0.4, 0.9) // Solidify opacity when they hit the ground
+              x: petal.x, y: petal.y, size: petal.petalSize, angle: petal.angle, color: petal.color, opacity: Math.min(baseOpacity + 0.4, 0.9)
             });
           } else {
             fallenPetals.shift();
@@ -406,8 +407,6 @@ const initSnowAndWind = () => {
               x: petal.x, y: petal.y, size: petal.petalSize, angle: petal.angle, color: petal.color, opacity: Math.min(baseOpacity + 0.4, 0.9)
             });
           }
-
-          // Reset falling petal to the top
           petal.y = -20; 
           petal.x = Math.random() * logicalWidth; 
         }
@@ -456,3 +455,4 @@ if (els.btnEnterSanctuary) {
 initUI();
 initOrbs();
 initSnowAndWind();
+                                    
