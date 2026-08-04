@@ -450,3 +450,25 @@ initUI();
 initOrbs();
 initSnowAndWind();
                                     
+// --- CODEX AUTO-AGE CALCULATOR ---
+const birthdateInput = document.getElementById('person-birthdate');
+const ageInput = document.getElementById('person-age');
+
+if (birthdateInput && ageInput) {
+  birthdateInput.addEventListener('change', (e) => {
+    if (!e.target.value) return; 
+    
+    const dob = new Date(e.target.value);
+    const today = new Date();
+    
+    let age = today.getFullYear() - dob.getFullYear();
+    const monthDifference = today.getMonth() - dob.getMonth();
+    
+    // Adjust age if the birthday hasn't happened yet this year
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < dob.getDate())) {
+      age--;
+    }
+    
+    ageInput.value = age;
+  });
+}
