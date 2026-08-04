@@ -225,6 +225,7 @@ const initSnowAndWind = () => {
   let dpi = window.devicePixelRatio || 1;
   let logicalWidth = 0;
   let logicalHeight = 0;
+  let fallenPetals = []; // Memory bank for accumulated cherry blossoms
 
   const resizeCanvas = () => {
     const container = canvas.parentElement;
@@ -235,12 +236,14 @@ const initSnowAndWind = () => {
     canvas.width = logicalWidth * dpi;
     canvas.height = logicalHeight * dpi;
     ctx.scale(dpi, dpi);
+    
+    // Clear fallen petals if screen resizes drastically so they don't float mid-air
+    fallenPetals = []; 
   };
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
   let particles = [];
-  let fallenPetals = []; // Memory bank for accumulated cherry blossoms
   let globalWind = 1.5; 
   let targetWind = 1.5;
 
@@ -266,10 +269,22 @@ const initSnowAndWind = () => {
     });
   }
 
-  // Wind now shifts extremely slowly (every 30 seconds) and gradually
+  // Wind shifts extremely slowly (every 30 seconds)
   setInterval(() => {
     targetWind = (Math.random() * 2.5) - 1.25; 
   }, 30000);
+
+  // Pre-warm simulation
+  for (let i = 0; i < 300; i++) {
+    globalWind += (targetWind - globalWind) * 0.005; 
+    particles.forEach(p => {
+      p.y += p.snowMass; 
+      p.x += globalWind * (p.snowMass * 0.5); 
+      if (p.y > window.innerHeight) p.y = -10;
+      if (p.x > window.innerWidth + 50) p.x = -50;
+      if (p.x < -50) p.x = window.innerWidth + 50;
+    });
+  }
 
   const animateWeather = () => {
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
@@ -320,9 +335,8 @@ const initSnowAndWind = () => {
 
         ctx.beginPath();
         ctx.moveTo(flake.x, flake.y);
-        // Reduced streak multiplier to look like snow, not rain
         ctx.lineTo(flake.x - (vx * 1.2), flake.y - (vy * 1.2));
-        ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
+        ctx.strokeStyle = `rgba(${r}, g, b, ${baseOpacity})`;
         ctx.lineWidth = flake.snowRadius;
         ctx.lineCap = 'round';
         ctx.stroke();
@@ -351,18 +365,17 @@ const initSnowAndWind = () => {
 
       // 2. Draw Active Falling Petals
       particles.forEach((petal, index) => {
-        // Limit petal count to 350 for a cleaner look
+        // Limit active falling petal count to 350 for a cleaner look
         if (index > 350) return; 
 
         const baseOpacity = (petal.depth / 100) * 0.7 + 0.15;
-        // Petals catch more wind than snow
         const vx = (globalWind * petal.sakuraMass * 1.2) + (Math.sin(petal.spin) * 0.5);
         const vy = petal.sakuraMass;
 
         ctx.save();
         ctx.translate(petal.x, petal.y);
         ctx.rotate(petal.angle);
-        ctx.scale(Math.sin(petal.spin), 1); // 3D tumbling
+        ctx.scale(Math.sin(petal.spin), 1); 
         
         ctx.beginPath();
         ctx.ellipse(0, 0, petal.petalSize, petal.petalSize / 2, 0, 0, Math.PI * 2);
@@ -375,23 +388,22 @@ const initSnowAndWind = () => {
         petal.angle += 0.01;
         petal.spin += petal.spinSpeed;
         
-        // When petal hits the bottom edge
-        if (petal.y > logicalHeight - (Math.random() * 20)) { 
-          // Add to accumulation array (cap at 600 petals to prevent lag)
-          if (fallenPetals.length < 600) {
+        // Accumulation Engine: Creates a thick, randomized bed up to 50px high
+        if (petal.y > logicalHeight - (Math.random() * 50)) { 
+          // Massive 2000 limit for a deeply piled look
+          if (fallenPetals.length < 2000) {
             fallenPetals.push({
               x: petal.x,
               y: petal.y,
               size: petal.petalSize,
               angle: petal.angle,
               color: petal.color,
-              opacity: baseOpacity
+              opacity: Math.min(baseOpacity + 0.4, 0.9) // Solidify opacity when they hit the ground
             });
           } else {
-            // Remove the oldest petal and add the new one
             fallenPetals.shift();
             fallenPetals.push({
-              x: petal.x, y: petal.y, size: petal.petalSize, angle: petal.angle, color: petal.color, opacity: baseOpacity
+              x: petal.x, y: petal.y, size: petal.petalSize, angle: petal.angle, color: petal.color, opacity: Math.min(baseOpacity + 0.4, 0.9)
             });
           }
 
