@@ -108,40 +108,34 @@ els.navItems.forEach(item => {
   });
 });
 
-// --- HYBRID EDITOR & LIVE MARKDOWN ---
+// ---// --- HYBRID EDITOR & LIVE MARKDOWN ---
 els.toolbarBtns.forEach(btn => {
   btn.addEventListener('click', (e) => {
     e.preventDefault();
     const format = e.currentTarget.getAttribute('data-format');
     const textarea = els.entryBody;
+    
+    // 1. Force the browser to re-focus on the text editor
+    textarea.focus(); 
+    
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const text = textarea.value;
-    const selectedText = text.substring(start, end);
+    const selectedText = textarea.value.substring(start, end);
     let replacement = '';
     
+    // 2. Wrap the text in Markdown
     if (format === 'bold') replacement = `**${selectedText || 'bold text'}**`;
     if (format === 'italic') replacement = `*${selectedText || 'italic text'}*`;
-    if (format === 'h2') replacement = `\n## ${selectedText || 'Header'}`;
+    if (format === 'h2') replacement = `\n## ${selectedText || 'Header'}\n`;
     if (format === 'bullet') replacement = `\n- ${selectedText || 'list item'}`;
     
-    textarea.value = text.substring(0, start) + replacement + text.substring(end);
-    textarea.focus();
+    // 3. Bulletproof insertion that preserves the browser's "Undo" history
+    textarea.setRangeText(replacement, start, end, 'select');
+    
     if (typeof window.triggerModuleAutosave === 'function') window.triggerModuleAutosave();
   });
 });
 
-if (els.entryBody) {
-  els.entryBody.addEventListener('keydown', function(e) {
-    if (e.key === 'Tab') {
-      e.preventDefault();
-      const start = this.selectionStart;
-      const end = this.selectionEnd;
-      this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-      this.selectionStart = this.selectionEnd = start + 4;
-    }
-  });
-}
 
 // --- QUOTE LIKE BUTTON LOGIC ---
 if (els.btnLikeQuote) {
