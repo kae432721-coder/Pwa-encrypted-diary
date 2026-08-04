@@ -151,22 +151,27 @@
               <button id="tab-btn-lore" class="tab-btn">Lore</button>
             </div>
             
-            <div id="input-pane-person" class="tab-pane">
+                        <div id="input-pane-person" class="tab-pane">
               <div class="image-upload-wrapper">
                 <img id="person-img-preview" class="profile-img-preview hidden" src="" alt="Profile Preview">
                 <label for="person-image" class="btn-secondary" style="font-size: 0.85rem; display: inline-block; cursor: pointer; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 6px;">Upload Portrait (< 5MB)</label>
                 <input type="file" id="person-image" class="hidden" accept="image/jpeg, image/png, image/webp">
               </div>
+              
               <input type="text" id="person-name" class="input-minimal" placeholder="Name">
+              <input type="date" id="person-birthdate" class="input-minimal" title="Birthdate" style="color: var(--text-muted);">
+              
               <div class="input-row">
                 <input type="text" id="person-age" class="input-minimal" placeholder="Age / Era">
                 <input type="text" id="person-relation" class="input-minimal" placeholder="Relation / Role">
               </div>
+              
               <div class="input-row">
                 <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes..."></textarea>
                 <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes..."></textarea>
               </div>
             </div>
+
 
             <div id="input-pane-lore" class="tab-pane hidden">
               <input type="text" id="lore-title" class="input-minimal" placeholder="Concept / Title">
