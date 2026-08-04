@@ -201,76 +201,56 @@ document.getElementById('btn-confirm-key-change').addEventListener('click', asyn
   btn.innerText = "Re-Encrypt Vault";
   btn.disabled = false;
 });
-
 // --- AUTHENTICATION FLOW ---
-let tokenClient;
+let tokenClient = null;
 
-window.onload = function () {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: GOOGLE_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
-    callback: async (tokenResponse) => {
-      if (tokenResponse && tokenResponse.access_token) {
-        gDriveToken = tokenResponse.access_token;
-        
-        try {
-          const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-             headers: { Authorization: `Bearer ${gDriveToken}` }
-          });
-          const userData = await userRes.json();
-          document.getElementById('user-email-display').innerText = `Identity Verified: ${userData.email}`;
-        } catch(e) {
-          document.getElementById('user-email-display').innerText = `Secure Connection Established.`;
+const initializeGoogleAuth = () => {
+  if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
+      callback: async (tokenResponse) => {
+        if (tokenResponse && tokenResponse.access_token) {
+          gDriveToken = tokenResponse.access_token;
+          
+          try {
+            const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+               headers: { Authorization: `Bearer ${gDriveToken}` }
+            });
+            const userData = await userRes.json();
+            document.getElementById('user-email-display').innerText = `Identity Verified: ${userData.email}`;
+          } catch(e) {
+            document.getElementById('user-email-display').innerText = `Secure Connection Established.`;
+          }
+          
+          document.getElementById('step-google').classList.add('hidden');
+          document.getElementById('step-password').classList.remove('hidden');
+          document.getElementById('diary-password').focus();
         }
-        
-        document.getElementById('step-google').classList.add('hidden');
-        document.getElementById('step-password').classList.remove('hidden');
-        document.getElementById('diary-password').focus();
       }
-    }
-  });
+    });
+    return true;
+  }
+  return false;
 };
 
+// Try initializing immediately, or wait for window load
+window.addEventListener('load', () => {
+  if (!initializeGoogleAuth()) {
+    // Fallback timer if script is slightly delayed by network
+    setTimeout(initializeGoogleAuth, 1000);
+  }
+});
+
 document.getElementById('btn-google-login').addEventListener('click', () => {
+  if (!tokenClient) {
+    // Force try initialization if user clicks before window load completed
+    const initialized = initializeGoogleAuth();
+    if (!initialized) {
+      alert("Google Identity Services script is still loading or blocked by an ad-blocker. Please refresh the page.");
+      return;
+    }
+  }
   tokenClient.requestAccessToken();
 });
 
-document.getElementById('btn-unlock').addEventListener('click', async () => {
-  const passInput = document.getElementById('diary-password');
-  const pass = passInput.value.trim();
-  if (!pass) return;
-  
-  activeKey = pass;
-  const btn = document.getElementById('btn-unlock');
-  btn.innerText = "Verifying Vault...";
-  btn.disabled = true;
-
-  try {
-    gDriveFileId = await findDriveFile();
-    
-    if (gDriveFileId) {
-      await pullFromDrive();
-    } else {
-      isCloudReady = true; 
-      await window.pushToDrive();
-    }
-    
-    isCloudReady = true; 
-    
-    document.getElementById('auth-screen').classList.add('hidden');
-    document.getElementById('quote-screen').classList.remove('hidden');
-    
-    window.dispatchEvent(new Event('cloudDataLoaded'));
-    
-  } catch (err) {
-    if (err.message === "DECRYPTION_FAILED") {
-      alert("Incorrect key for this sanctuary.");
-      passInput.value = "";
-    } else {
-      alert("Network error establishing secure connection.");
-      console.error(err);
-    }
-    btn.innerText = "Unlock Vault";
-    btn.disabled = false;
-  }
-});
