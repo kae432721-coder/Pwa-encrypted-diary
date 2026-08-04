@@ -17,6 +17,9 @@
 </head>
 <body data-theme="light">
 
+  <!-- THE CUTOUT FIX: The weather canvas is now positioned here to cover the entire screen -->
+  <canvas id="snow-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -1;"></canvas>
+
   <!-- AUTHENTICATION & GATEKEEPING -->
   <div id="auth-screen" class="fullscreen-view">
     <canvas id="orbs-canvas"></canvas>
@@ -85,7 +88,7 @@
     <!-- Main Content Area -->
     <main id="content-area">
       
-            <!-- Top Bar: Controls -->
+      <!-- Top Bar: Controls -->
       <header class="top-bar">
         <div class="left-controls">
           <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar">
@@ -115,8 +118,7 @@
           </div>
           
           <div class="journal-editor-container">
-            <!-- Snow and Wind Canvas layered directly behind the text editor -->
-            <canvas id="snow-canvas"></canvas>
+            <!-- Notice: Canvas is removed from here -->
             
             <div class="editor-toolbar">
               <button class="toolbar-btn" data-format="bold" title="Bold">Bold</button>
@@ -131,6 +133,8 @@
             </div>
             
             <input type="text" id="entry-title" class="title-input" placeholder="Untitled">
+            
+            <!-- This WYSIWYG editor setup is correct! -->
             <div id="entry-body" class="journal-textarea" contenteditable="true"></div>
           </div>
         </div>
@@ -151,7 +155,7 @@
               <button id="tab-btn-lore" class="tab-btn">Lore</button>
             </div>
             
-                        <div id="input-pane-person" class="tab-pane">
+            <div id="input-pane-person" class="tab-pane">
               <div class="image-upload-wrapper">
                 <img id="person-img-preview" class="profile-img-preview hidden" src="" alt="Profile Preview">
                 <label for="person-image" class="btn-secondary" style="font-size: 0.85rem; display: inline-block; cursor: pointer; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 6px;">Upload Portrait (< 5MB)</label>
