@@ -5,19 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sanctuary OS</title>
   
-  <!-- Premium Typography: Inter for UI, Cormorant Garamond for deep reading -->
+  <!-- Premium Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
   
-  <!-- Google Identity Services -->
-  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <!-- Google Identity Services (Removed async/defer to prevent race conditions) -->
+  <script src="https://accounts.google.com/gsi/client"></script>
 </head>
 <body data-theme="light">
 
-  <!-- PHASE 6: AUTHENTICATION & GATEKEEPING -->
+  <!-- AUTHENTICATION & GATEKEEPING -->
   <div id="auth-screen" class="fullscreen-view">
     <canvas id="orbs-canvas"></canvas>
     <div class="auth-card">
@@ -28,7 +28,7 @@
         <button id="btn-google-login" class="btn-primary" style="margin-bottom: 20px;">Sign in with Google</button>
         <div style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
           <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Unrecognized Identity?</p>
-          <a href="mailto:kae432721@gmail.com?subject=Sanctuary%20Access%20Request&body=I%20am%20requesting%20authentication%20to%20enter%20the%20Sanctuary." class="btn-secondary" style="text-decoration: none; font-size: 0.85rem;">Request Access</a>
+          <a href="mailto:owner@example.com?subject=Sanctuary%20Access%20Request&body=I%20am%20requesting%20authentication%20to%20enter%20the%20Sanctuary." class="btn-secondary" style="text-decoration: none; font-size: 0.85rem;">Request Access</a>
         </div>
       </div>
       
@@ -40,7 +40,7 @@
     </div>
   </div>
 
-  <!-- PHASE 5: QUOTE OF THE DAY & CURATION -->
+  <!-- QUOTE OF THE DAY & CURATION -->
   <div id="quote-screen" class="fullscreen-view hidden">
     <div class="quote-container">
       <p id="daily-quote-text" class="quote-text"></p>
@@ -55,10 +55,10 @@
     </div>
   </div>
 
-  <!-- PHASE 1 & 2: MAIN WORKSPACE & TYPOGRAPHY -->
+  <!-- MAIN WORKSPACE -->
   <div id="main-workspace" class="hidden">
     
-    <!-- Dynamic Sliding Sidebar (Zero Icons, Pure Typography) -->
+    <!-- Dynamic Sliding Sidebar -->
     <nav id="sidebar" class="sidebar-expanded">
       <div class="sidebar-header">
         <h2 class="sidebar-title">Sanctuary</h2>
@@ -110,6 +110,9 @@
           </div>
           
           <div class="journal-editor-container">
+            <!-- Snow and Wind Canvas layered directly behind the text editor -->
+            <canvas id="snow-canvas"></canvas>
+            
             <div class="editor-toolbar">
               <button class="toolbar-btn" data-format="bold" title="Bold">Bold</button>
               <button class="toolbar-btn" data-format="italic" title="Italic">Italic</button>
@@ -123,7 +126,7 @@
             </div>
             
             <input type="text" id="entry-title" class="title-input" placeholder="Untitled">
-            <textarea id="entry-body" class="journal-textarea" placeholder="Start writing... (e.g., Analyzing QAFTX mock test sequences or calculating the 116 kcal burned during a 1500 ELO match)"></textarea>
+            <textarea id="entry-body" class="journal-textarea" placeholder="Start writing..."></textarea>
           </div>
         </div>
       </section>
@@ -136,7 +139,6 @@
         </div>
         <div id="codex-grid" class="masonry-grid"></div>
         
-        <!-- Dual Tab Modal: Person vs Lore -->
         <div id="modal-codex" class="modal hidden">
           <div class="modal-content">
             <div class="modal-tabs">
@@ -156,20 +158,20 @@
                 <input type="text" id="person-relation" class="input-minimal" placeholder="Relation / Role">
               </div>
               <div class="input-row">
-                <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes: Karan Aujla, Nusrat Fateh Ali Khan..."></textarea>
-                <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes: Ionic Equilibrium..."></textarea>
+                <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes..."></textarea>
+                <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes..."></textarea>
               </div>
             </div>
 
             <div id="input-pane-lore" class="tab-pane hidden">
               <input type="text" id="lore-title" class="input-minimal" placeholder="Concept / Title">
-              <input type="text" id="lore-category" class="input-minimal" placeholder="Category (e.g., Oregairu Chronology, JEE Strategy)">
+              <input type="text" id="lore-category" class="input-minimal" placeholder="Category">
             </div>
 
             <textarea id="codex-notes" class="journal-textarea modal-textarea" placeholder="Deep-dive analysis or notes..."></textarea>
             
             <div class="modal-actions">
-              <button id="btn-save-codex" class="btn-primary">Save to Codex</button>
+              <button id="btn-save-codex" class="btn-primary">Save</button>
               <button id="btn-close-codex" class="btn-secondary">Cancel</button>
             </div>
           </div>
@@ -187,7 +189,7 @@
         <div id="modal-list" class="modal hidden">
           <div class="modal-content">
             <h3 style="font-family: var(--font-reading); font-size: 2rem; font-weight: 500; margin-bottom: 24px;">Create List</h3>
-            <input type="text" id="list-title" class="input-minimal" placeholder="e.g., College Preferences (VNIT, MNIT...)">
+            <input type="text" id="list-title" class="input-minimal" placeholder="List Title">
             <input type="text" id="list-first-item" class="input-minimal" placeholder="First item">
             <div class="modal-actions">
               <button id="btn-save-list" class="btn-primary">Create</button>
@@ -209,7 +211,7 @@
         <div id="thoughts-feed" class="masonry-grid" style="margin-top: 40px;"></div>
       </section>
       
-      <!-- 5. SETTINGS VIEW (Permanent Layout) -->
+      <!-- 5. SETTINGS VIEW -->
       <section id="view-settings" class="view-section hidden">
         <h2 class="section-title" style="margin-bottom: 40px;">Settings</h2>
         
@@ -251,9 +253,9 @@
     </main>
   </div>
 
-  <!-- Core Engine Scripts -->
+  <!-- Script load order is critical: Cloud -> Modules -> App -->
   <script src="js/cloud.js"></script>
-  <script src="js/app.js"></script>
   <script src="js/modules.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
