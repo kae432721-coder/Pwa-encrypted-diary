@@ -252,14 +252,14 @@
 
           <!-- Cryptographic Engine -->
 <div>
-  <h3 style="font-weight: 500; margin-bottom: 4px;">Cryptographic Core</h3>
-  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Safely decrypt and re-encrypt your entire vault with a new Master Key. Do not close the browser during this process.</p>
+  <h3 style="font-weight: 500; margin-bottom: 4px;">Security</h3>
+  <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Update your password to keep your journal safe. Do not close the browser while saving.</p>
 
-  <input type="password" id="old-key" class="input-minimal" placeholder="Current Key">
-  <input type="password" id="new-key" class="input-minimal" placeholder="New Key">
-  <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Key">
+  <input type="password" id="old-key" class="input-minimal" placeholder="Current Password">
+  <input type="password" id="new-key" class="input-minimal" placeholder="New Password">
+  <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Password">
 
-  <button id="btn-confirm-key-change" class="btn-primary" style="margin-top: 20px;">Re-Encrypt Vault</button>
+  <button id="btn-confirm-key-change" class="btn-primary" style="margin-top: 20px;">Change Password</button>
 </div>
           
         </div>
@@ -271,6 +271,7 @@
   <!-- Script load order is critical: Cloud -> Modules -> App -->
   <script src="js/cloud.js"></script>
   <script src="js/modules.js"></script>
+  <script src="js/quotes.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>
