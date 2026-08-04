@@ -1,7 +1,4 @@
-// --- QUOTE OF THE DAY ENGINE ---
 
-
-const getDailyQuote = () => {
 // --- SANCTUARY ARCHIVES: QUOTES DATABASE ---
 const sanctuaryQuotes = [
   // THE LITERARY STRAY DOGS
@@ -179,12 +176,8 @@ const sanctuaryQuotes = [
   { id: 'q150', text: "The wound is the place where the Light enters you.", author: "Rumi" }
 ];
 
+// --- QUOTE OF THE DAY ENGINE ---
 const getDailyQuote = () => {
-  const today = Math.floor(Date.now() / 86400000); 
-  const quoteIndex = today % sanctuaryQuotes.length;
-  return sanctuaryQuotes[quoteIndex];
-};
-
   const today = Math.floor(Date.now() / 86400000); 
   const quoteIndex = today % sanctuaryQuotes.length;
   return sanctuaryQuotes[quoteIndex];
