@@ -37,6 +37,7 @@ const els = {
   sidebar: document.getElementById('sidebar'),
   btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
   btnThemeToggle: document.getElementById('btn-theme-toggle'),
+  btnThemeIcon: document.getElementById('btn-theme-toggle-icon'),
   
   navItems: document.querySelectorAll('.nav-item'),
   viewSections: document.querySelectorAll('.view-section'),
@@ -53,31 +54,39 @@ const els = {
 };
 
 // --- THEME ENGINE ---
-if (els.btnThemeToggle) {
-  els.btnThemeToggle.addEventListener('click', () => {
-    const currentTheme = document.body.getAttribute('data-theme');
-    document.body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
-  });
-}
+const toggleTheme = () => {
+  const currentTheme = document.body.getAttribute('data-theme');
+  document.body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+};
 
-// --- DYNAMIC SIDEBAR CONTROLS (Full Slide) ---
+if (els.btnThemeToggle) els.btnThemeToggle.addEventListener('click', toggleTheme);
+if (els.btnThemeIcon) els.btnThemeIcon.addEventListener('click', toggleTheme);
+
+
+// --- FULL WORKSPACE DOUBLE-SLIDE CONTROLS ---
 if (els.btnToggleSidebar) {
   els.btnToggleSidebar.addEventListener('click', () => {
     const isExpanded = els.sidebar.classList.contains('sidebar-expanded');
+    const journalPanel = document.getElementById('journal-history-panel'); 
+
     if (isExpanded) {
       els.sidebar.classList.remove('sidebar-expanded');
       els.sidebar.classList.add('sidebar-collapsed');
+      if(journalPanel) journalPanel.classList.add('collapsed');
     } else {
       els.sidebar.classList.remove('sidebar-collapsed');
       els.sidebar.classList.add('sidebar-expanded');
+      if(journalPanel) journalPanel.classList.remove('collapsed');
     }
   });
 }
 
 if (els.btnNewEntry) {
   els.btnNewEntry.addEventListener('click', () => {
+    const journalPanel = document.getElementById('journal-history-panel');
     els.sidebar.classList.remove('sidebar-expanded');
     els.sidebar.classList.add('sidebar-collapsed');
+    if(journalPanel) journalPanel.classList.add('collapsed');
   });
 }
 
@@ -123,15 +132,17 @@ els.toolbarBtns.forEach(btn => {
   });
 });
 
-els.entryBody.addEventListener('keydown', function(e) {
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const start = this.selectionStart;
-    const end = this.selectionEnd;
-    this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
-    this.selectionStart = this.selectionEnd = start + 4;
-  }
-});
+if (els.entryBody) {
+  els.entryBody.addEventListener('keydown', function(e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const start = this.selectionStart;
+      const end = this.selectionEnd;
+      this.value = this.value.substring(0, start) + "    " + this.value.substring(end);
+      this.selectionStart = this.selectionEnd = start + 4;
+    }
+  });
+}
 
 // --- QUOTE LIKE BUTTON LOGIC ---
 if (els.btnLikeQuote) {
@@ -144,7 +155,6 @@ if (els.btnLikeQuote) {
       els.btnLikeQuote.style.color = 'var(--text-muted)';
       els.btnLikeQuote.style.fill = 'none';
     }
-    // Flag to be checked by modules.js during archival
     if (window.currentDailyQuote) {
       window.currentDailyQuote.liked = els.btnLikeQuote.classList.contains('liked');
     }
@@ -207,7 +217,7 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
-// --- SNOW & WIND PHYSICS ENGINE (Writing Board) ---
+// --- REFINED SNOW & WIND PHYSICS ENGINE ---
 const initSnowAndWind = () => {
   const canvas = document.getElementById('snow-canvas');
   if (!canvas) return;
@@ -225,28 +235,27 @@ const initSnowAndWind = () => {
   let wind = 0; 
   let targetWind = 0;
 
-  for (let i = 0; i < 60; i++) {
+  for (let i = 0; i < 40; i++) { 
     snowflakes.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 2 + 0.5,
-      speedY: Math.random() * 1 + 0.5,
-      opacity: Math.random() * 0.5 + 0.3
+      radius: Math.random() * 1.5 + 0.5, 
+      speedY: Math.random() * 0.8 + 0.2, 
+      opacity: Math.random() * 0.5 + 0.1
     });
   }
 
-  // Shifts wind velocity target randomly every 4 seconds
   setInterval(() => {
-    targetWind = (Math.random() * 4) - 2; 
-  }, 4000);
+    targetWind = (Math.random() * 3) - 1.5; 
+  }, 5000);
 
   const animateSnow = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const isDark = document.body.getAttribute('data-theme') === 'dark';
-    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.8)' : 'rgba(0, 0, 0, 0.3)';
+    
+    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(150, 180, 210, 0.4)';
 
-    // Interpolate wind for smooth directional shifts
-    wind += (targetWind - wind) * 0.02;
+    wind += (targetWind - wind) * 0.01; 
 
     snowflakes.forEach(flake => {
       ctx.beginPath();
@@ -255,7 +264,7 @@ const initSnowAndWind = () => {
       ctx.fill();
 
       flake.y += flake.speedY;
-      flake.x += wind + (Math.random() * 0.5 - 0.25); 
+      flake.x += wind + (Math.random() * 0.2 - 0.1); 
 
       if (flake.y > canvas.height) {
         flake.y = -5;
@@ -297,7 +306,6 @@ if (els.btnEnterSanctuary) {
       setTimeout(() => els.mainWorkspace.style.opacity = '1', 50);
       els.mainWorkspace.style.transition = 'opacity 0.8s ease';
       
-      // Re-trigger resize for canvas once workspace is visible
       window.dispatchEvent(new Event('resize'));
     }, 1000);
   });
