@@ -108,33 +108,24 @@ els.navItems.forEach(item => {
   });
 });
 
-// ---// --- HYBRID EDITOR & LIVE MARKDOWN ---
+// --- WYSIWYG RICH TEXT EDITOR ---
 els.toolbarBtns.forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
+  // We use 'mousedown' so the text editor doesn't lose your highlighted words
+  btn.addEventListener('mousedown', (e) => {
+    e.preventDefault(); 
+
     const format = e.currentTarget.getAttribute('data-format');
-    const textarea = els.entryBody;
-    
-    // 1. Force the browser to re-focus on the text editor
-    textarea.focus(); 
-    
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    let replacement = '';
-    
-    // 2. Wrap the text in Markdown
-    if (format === 'bold') replacement = `**${selectedText || 'bold text'}**`;
-    if (format === 'italic') replacement = `*${selectedText || 'italic text'}*`;
-    if (format === 'h2') replacement = `\n## ${selectedText || 'Header'}\n`;
-    if (format === 'bullet') replacement = `\n- ${selectedText || 'list item'}`;
-    
-    // 3. Bulletproof insertion that preserves the browser's "Undo" history
-    textarea.setRangeText(replacement, start, end, 'select');
-    
+
+    // Native browser commands that actually change the font weight/style visually
+    if (format === 'bold') document.execCommand('bold', false, null);
+    if (format === 'italic') document.execCommand('italic', false, null);
+    if (format === 'h2') document.execCommand('formatBlock', false, 'H2');
+    if (format === 'bullet') document.execCommand('insertUnorderedList', false, null);
+
     if (typeof window.triggerModuleAutosave === 'function') window.triggerModuleAutosave();
   });
 });
+
 
 
 // --- QUOTE LIKE BUTTON LOGIC ---
