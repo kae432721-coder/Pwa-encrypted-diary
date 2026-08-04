@@ -233,3 +233,37 @@ body {
 /* Quick Capture */
 .quick-capture-box { background: var(--bg-surface); border: 1px solid var(--border-light); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px; box-shadow: var(--shadow-subtle); max-width: 800px; }
 .quick-capture-box textarea { resize: none; margin-bottom: 0; font-family: var(--font-reading); font-size: 1.25rem;}
+
+/* Ensure the toggle button is ALWAYS accessible */
+#btn-toggle-sidebar {
+  position: fixed;
+  top: 20px; /* Adjust based on your header height */
+  left: 20px;
+  z-index: 9999; /* Keeps it above everything, including the weather */
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: transform 0.3s ease;
+}
+
+/* Optional: Shift the button slightly when the sidebar is open */
+.sidebar-expanded ~ #btn-toggle-sidebar {
+  transform: translateX(250px); /* Matches your sidebar width */
+}
+
+/* WYSIWYG Editor Adjustments */
+.journal-textarea[contenteditable] {
+  cursor: text;
+  overflow-y: auto;
+  min-height: 50vh;
+}
+
+/* Faking the placeholder text */
+.journal-textarea[contenteditable]:empty::before {
+  content: "Start writing...";
+  color: var(--text-muted);
+  pointer-events: none;
+  display: block; /* Ensures it acts like block text */
+}
+
