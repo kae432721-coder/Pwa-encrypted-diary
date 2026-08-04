@@ -266,4 +266,21 @@ body {
   pointer-events: none;
   display: block; /* Ensures it acts like block text */
 }
+/* --- SLEEK TEXT DELETE BUTTONS --- */
+.btn-delete-text {
+  background: transparent;
+  border: none;
+  color: var(--text-muted); /* Blends in smoothly with the grey text */
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 0;
+  margin-left: auto; /* Pushes it to the right side if in a flex container */
+  transition: color 0.2s ease;
+}
+
+.btn-delete-text:hover {
+  color: var(--danger-color); /* Turns soft red when hovered */
+  text-decoration: underline;
+}
 
