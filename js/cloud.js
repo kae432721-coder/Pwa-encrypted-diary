@@ -1,20 +1,17 @@
-// --- ⚠️ GOOGLE CLOUD CONFIG ⚠️ ---
-// This is your specific Client ID for Google Identity Services
+// --- GOOGLE CLOUD CONFIG ---
 const GOOGLE_CLIENT_ID = "697780392985-iejrson8bir2ol3dvdngipg66k9ni0hs.apps.googleusercontent.com"; 
 
 // --- GLOBAL STATE VARIABLES ---
-// These are accessed by modules.js to render your UI
 let gDriveToken = null;
 let gDriveFileId = null;
 let activeKey = null;
 let isCloudReady = false; 
 
-// The Master Data Structure of your Sanctuary
 let sanctuaryData = {
   journal: [],
-  people: [],
+  codex: [], // Merged People & Lore
   lists: [],
-  quotes: []
+  thoughts: [] // Merged Quotes and Quick Thoughts
 };
 
 // --- CRYPTOGRAPHY ENGINE (AES-GCM 256) ---
@@ -64,13 +61,46 @@ async function decryptText(packedBase64, key) {
     const decryptedBuffer = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, cryptoKey, ciphertext);
     return new TextDecoder().decode(decryptedBuffer);
   } catch (err) {
-    throw new Error("DECRYPTION_FAILED"); // Triggered if password is wrong
+    throw new Error("DECRYPTION_FAILED");
   }
 }
 
+// --- IMAGE COMPRESSOR & BASE64 ENCODER ---
+// Converts uploaded images into highly compressed text strings to encrypt and store inside the JSON
+window.compressImage = (file) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = event => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800; // Cap width to prevent massive file bloat
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) { height *= MAX_WIDTH / width; width = MAX_WIDTH; }
+        } else {
+          if (height > MAX_HEIGHT) { width *= MAX_HEIGHT / height; height = MAX_HEIGHT; }
+        }
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        // Compress as JPEG at 70% quality
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    };
+    reader.onerror = error => reject(error);
+  });
+};
+
 // --- GOOGLE DRIVE SYNC ENGINE ---
 const findDriveFile = async () => {
-  const res = await fetch("https://www.googleapis.com/drive/v3/files?q=name='my_sanctuary.json' and trashed=false", { 
+  const res = await fetch("https://www.googleapis.com/drive/v3/files?q=name='sanctuary_os.json' and trashed=false", { 
     headers: { Authorization: `Bearer ${gDriveToken}` } 
   });
   const data = await res.json();
@@ -81,7 +111,7 @@ const createDriveFile = async (contentStr) => {
   const metaRes = await fetch("https://www.googleapis.com/drive/v3/files", {
     method: 'POST', 
     headers: { 'Authorization': `Bearer ${gDriveToken}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'my_sanctuary.json' })
+    body: JSON.stringify({ name: 'sanctuary_os.json' })
   });
   const metaData = await metaRes.json();
   await fetch(`https://www.googleapis.com/upload/drive/v3/files/${metaData.id}?uploadType=media`, {
@@ -92,14 +122,12 @@ const createDriveFile = async (contentStr) => {
   return metaData.id;
 };
 
-// Exposed globally so modules.js can call it when data changes
 window.pushToDrive = async () => {
-  if (!gDriveToken || !isCloudReady) return; // STRICT LOCK: Prevents overwriting with empty data
+  if (!gDriveToken || !isCloudReady) return; 
   const indicator = document.getElementById('cloud-indicator');
   
   try {
-    indicator.innerText = "Cloud: Syncing...";
-    // Encrypt the entire data structure into one secure payload
+    if (indicator) indicator.innerText = "Cloud: Syncing...";
     const encryptedPayload = await encryptText(JSON.stringify(sanctuaryData), activeKey);
     const contentStr = JSON.stringify({ payload: encryptedPayload });
 
@@ -113,9 +141,9 @@ window.pushToDrive = async () => {
        });
        if (!res.ok) throw new Error("Drive upload failed");
     }
-    indicator.innerText = "Cloud: Synced";
+    if (indicator) indicator.innerText = "Cloud: Synced";
   } catch (err) {
-    indicator.innerText = "Cloud: Sync Failed";
+    if (indicator) indicator.innerText = "Cloud: Sync Failed";
     console.error("Push Error:", err);
   }
 };
@@ -130,11 +158,49 @@ const pullFromDrive = async () => {
     const content = await res.json();
     if (content.payload) {
       const decryptedString = await decryptText(content.payload, activeKey);
-      // Merge with the default structure to ensure missing arrays (like new features) don't break the app
       sanctuaryData = { ...sanctuaryData, ...JSON.parse(decryptedString) };
     }
   }
 };
+
+// --- MASTER KEY CHANGE LOGIC ---
+document.getElementById('btn-change-password').addEventListener('click', () => {
+  document.getElementById('modal-change-key').classList.remove('hidden');
+});
+document.getElementById('btn-cancel-key-change').addEventListener('click', () => {
+  document.getElementById('modal-change-key').classList.add('hidden');
+  document.getElementById('old-key').value = '';
+  document.getElementById('new-key').value = '';
+  document.getElementById('new-key-confirm').value = '';
+});
+
+document.getElementById('btn-confirm-key-change').addEventListener('click', async () => {
+  const oldKey = document.getElementById('old-key').value.trim();
+  const newKey = document.getElementById('new-key').value.trim();
+  const newKeyConfirm = document.getElementById('new-key-confirm').value.trim();
+  
+  if (oldKey !== activeKey) { alert("Current Key is incorrect."); return; }
+  if (!newKey || newKey !== newKeyConfirm) { alert("New keys do not match."); return; }
+  
+  const btn = document.getElementById('btn-confirm-key-change');
+  btn.innerText = "Re-encrypting Vault...";
+  btn.disabled = true;
+
+  try {
+    // 1. Temporarily set active key to new key
+    activeKey = newKey;
+    // 2. Force a full push to drive using the new key
+    await window.pushToDrive();
+    
+    alert("Master Key successfully changed. Your vault has been re-encrypted.");
+    document.getElementById('btn-cancel-key-change').click();
+  } catch (err) {
+    alert("Failed to change key. Connection error.");
+    activeKey = oldKey; // Revert on failure
+  }
+  btn.innerText = "Re-Encrypt Vault";
+  btn.disabled = false;
+});
 
 // --- AUTHENTICATION FLOW ---
 let tokenClient;
@@ -147,18 +213,16 @@ window.onload = function () {
       if (tokenResponse && tokenResponse.access_token) {
         gDriveToken = tokenResponse.access_token;
         
-        // Fetch User Email to personalize the password screen
         try {
           const userRes = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
              headers: { Authorization: `Bearer ${gDriveToken}` }
           });
           const userData = await userRes.json();
-          document.getElementById('user-email-display').innerText = `Welcome, ${userData.email}`;
+          document.getElementById('user-email-display').innerText = `Identity Verified: ${userData.email}`;
         } catch(e) {
           document.getElementById('user-email-display').innerText = `Secure Connection Established.`;
         }
         
-        // Advance UI to Password Step
         document.getElementById('step-google').classList.add('hidden');
         document.getElementById('step-password').classList.remove('hidden');
         document.getElementById('diary-password').focus();
@@ -185,22 +249,17 @@ document.getElementById('btn-unlock').addEventListener('click', async () => {
     gDriveFileId = await findDriveFile();
     
     if (gDriveFileId) {
-      // File exists, securely download and decrypt it
       await pullFromDrive();
     } else {
-      // First time setup: push empty structure to create file
       isCloudReady = true; 
       await window.pushToDrive();
     }
     
-    // If we reach here, decryption succeeded or it is a brand new account.
-    isCloudReady = true; // STRICT LOCK RELEASED
+    isCloudReady = true; 
     
-    // Advance UI to Quote Screen
     document.getElementById('auth-screen').classList.add('hidden');
     document.getElementById('quote-screen').classList.remove('hidden');
     
-    // Dispatch a custom event to tell modules.js that the data is ready to be rendered
     window.dispatchEvent(new Event('cloudDataLoaded'));
     
   } catch (err) {
@@ -211,7 +270,7 @@ document.getElementById('btn-unlock').addEventListener('click', async () => {
       alert("Network error establishing secure connection.");
       console.error(err);
     }
-    btn.innerText = "Unlock";
+    btn.innerText = "Unlock Vault";
     btn.disabled = false;
   }
 });
