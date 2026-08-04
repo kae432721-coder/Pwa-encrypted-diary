@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sanctuary OS</title>
   
-  <!-- Premium Typography: Inter for clean UI, Lora for highly legible, long-distance reading -->
+  <!-- Premium Typography: Inter for UI, Cormorant Garamond for deep reading -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   
   <link rel="stylesheet" href="styles.css">
   
@@ -17,7 +17,7 @@
 </head>
 <body data-theme="light">
 
-  <!-- PHASE 1: AUTHENTICATION -->
+  <!-- PHASE 6: AUTHENTICATION & GATEKEEPING -->
   <div id="auth-screen" class="fullscreen-view">
     <canvas id="orbs-canvas"></canvas>
     <div class="auth-card">
@@ -25,53 +25,61 @@
       <p class="subtitle">A secure operating system for your mind.</p>
       
       <div id="step-google">
-        <button id="btn-google-login" class="btn-primary">Sign in with Google</button>
+        <button id="btn-google-login" class="btn-primary" style="margin-bottom: 20px;">Sign in with Google</button>
+        <div style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Unrecognized Identity?</p>
+          <a href="mailto:owner@example.com?subject=Sanctuary%20Access%20Request&body=I%20am%20requesting%20authentication%20to%20enter%20the%20Sanctuary." class="btn-secondary" style="text-decoration: none; font-size: 0.85rem;">Request Access</a>
+        </div>
       </div>
       
       <div id="step-password" class="hidden">
-        <p class="user-greeting" id="user-email-display"></p>
+        <p class="user-greeting" id="user-email-display" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;"></p>
         <input type="password" id="diary-password" placeholder="Enter your Master Key..." class="input-minimal" autocomplete="off" />
         <button id="btn-unlock" class="btn-primary">Unlock Vault</button>
       </div>
     </div>
   </div>
 
-  <!-- PHASE 2: QUOTE OF THE DAY -->
+  <!-- PHASE 5: QUOTE OF THE DAY & CURATION -->
   <div id="quote-screen" class="fullscreen-view hidden">
     <div class="quote-container">
       <p id="daily-quote-text" class="quote-text"></p>
       <p id="daily-quote-author" class="quote-author"></p>
-      <button id="btn-enter-sanctuary" class="btn-secondary fade-in-delayed">Enter</button>
+      
+      <div style="display: flex; justify-content: center; gap: 30px; margin-top: 40px;" class="fade-in-delayed">
+        <button id="btn-like-quote" class="icon-btn" title="Save to Pinned Thoughts" style="width: 45px; height: 45px; border: 1px solid var(--border-light); border-radius: 50%;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+        <button id="btn-enter-sanctuary" class="btn-primary" style="width: auto; padding: 0 40px; border-radius: 30px;">Enter</button>
+      </div>
     </div>
   </div>
 
-  <!-- PHASE 3: MAIN WORKSPACE -->
+  <!-- PHASE 1 & 2: MAIN WORKSPACE & TYPOGRAPHY -->
   <div id="main-workspace" class="hidden">
     
-    <!-- Dynamic Sliding Sidebar -->
+    <!-- Dynamic Sliding Sidebar (Zero Icons, Pure Typography) -->
     <nav id="sidebar" class="sidebar-expanded">
       <div class="sidebar-header">
         <h2 class="sidebar-title">Sanctuary</h2>
       </div>
       <ul class="nav-links">
         <li class="nav-item active" data-target="view-journal">
-          <span class="nav-icon">✎</span> <span class="nav-text">My Journal</span>
+          <span class="nav-text">My Journal</span>
         </li>
         <li class="nav-item" data-target="view-people">
-          <span class="nav-icon">⚇</span> <span class="nav-text">People & Lore</span>
+          <span class="nav-text">Codex</span>
         </li>
         <li class="nav-item" data-target="view-lists">
-          <span class="nav-icon">≡</span> <span class="nav-text">Lists & Tasks</span>
+          <span class="nav-text">Lists</span>
         </li>
         <li class="nav-item" data-target="view-thoughts">
-          <span class="nav-icon">✧</span> <span class="nav-text">Thoughts</span>
+          <span class="nav-text">Thoughts</span>
+        </li>
+        <li class="nav-item" data-target="view-settings" style="margin-top: 40px; border-top: 1px solid var(--border-light); border-radius: 0; padding-top: 20px;">
+          <span class="nav-text">Settings</span>
         </li>
       </ul>
-      
-      <div class="sidebar-footer">
-        <button id="btn-change-password" class="btn-text-only">Change Master Key</button>
-        <div class="cloud-status" id="cloud-indicator">Cloud: Synced</div>
-      </div>
     </nav>
 
     <!-- Main Content Area -->
@@ -81,73 +89,65 @@
       <header class="top-bar">
         <div class="left-controls">
           <button id="btn-toggle-sidebar" class="icon-btn" title="Toggle Sidebar">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
           </button>
           <div class="date-display" id="current-date"></div>
         </div>
         
         <div class="window-controls">
-          <button id="btn-theme-toggle" class="icon-btn" title="Toggle Day/Night">
-            <svg id="icon-moon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-            <svg id="icon-sun" class="hidden" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-          </button>
-          <button id="btn-lock-diary" class="icon-btn" title="Lock Diary">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+          <button id="btn-lock-diary" class="icon-btn" title="Lock Vault">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </button>
         </div>
       </header>
 
-      <!-- Dynamic Views -->
-      
       <!-- 1. JOURNAL VIEW -->
       <section id="view-journal" class="view-section active">
         <div class="journal-layout">
           <div id="journal-history-panel" class="journal-sidebar">
-            <button id="btn-new-entry" class="btn-primary" style="margin-bottom: 20px;">+ New Page</button>
+            <button id="btn-new-entry" class="btn-primary" style="margin-bottom: 30px;">New Page</button>
             <ul id="journal-history-list" class="history-list"></ul>
           </div>
           
           <div class="journal-editor-container">
-            <!-- Hybrid Editor Toolbar -->
             <div class="editor-toolbar">
-              <button class="toolbar-btn" data-format="bold" title="Bold (Ctrl+B)"><b>B</b></button>
-              <button class="toolbar-btn" data-format="italic" title="Italic (Ctrl+I)"><i>I</i></button>
-              <button class="toolbar-btn" data-format="bullet" title="Bullet List">• List</button>
+              <button class="toolbar-btn" data-format="bold" title="Bold">Bold</button>
+              <button class="toolbar-btn" data-format="italic" title="Italic">Italic</button>
+              <button class="toolbar-btn" data-format="h2" title="Header">Header</button>
+              <button class="toolbar-btn" data-format="bullet" title="Bullet List">List</button>
               <div class="toolbar-divider"></div>
-              <span class="toolbar-status">Markdown Supported</span>
+              <span class="toolbar-status">Live Markdown Engine</span>
               <button id="btn-delete-entry" class="icon-btn btn-danger hidden" style="margin-left: auto;" title="Delete Page">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               </button>
             </div>
             
             <input type="text" id="entry-title" class="title-input" placeholder="Untitled">
-            <textarea id="entry-body" class="journal-textarea" placeholder="Start writing... (Use Markdown or the toolbar above)"></textarea>
+            <textarea id="entry-body" class="journal-textarea" placeholder="Start writing... (e.g., Analyzing QAFTX mock test sequences or calculating the 116 kcal burned during a 1500 ELO match)"></textarea>
           </div>
         </div>
       </section>
 
-      <!-- 2. PEOPLE & LORE VIEW -->
+      <!-- 2. CODEX VIEW -->
       <section id="view-people" class="view-section hidden">
         <div class="section-header">
           <h2 class="section-title">Codex</h2>
-          <button id="btn-add-codex" class="btn-primary" style="width: auto;">+ Add Entry</button>
+          <button id="btn-add-codex" class="btn-primary" style="width: auto;">Add Entry</button>
         </div>
-        <!-- Masonry Grid Container -->
         <div id="codex-grid" class="masonry-grid"></div>
         
         <!-- Dual Tab Modal: Person vs Lore -->
         <div id="modal-codex" class="modal hidden">
           <div class="modal-content">
             <div class="modal-tabs">
-              <button id="tab-btn-person" class="tab-btn active">👤 Person</button>
-              <button id="tab-btn-lore" class="tab-btn">📜 Lore</button>
+              <button id="tab-btn-person" class="tab-btn active">Person</button>
+              <button id="tab-btn-lore" class="tab-btn">Lore</button>
             </div>
             
-            <!-- PERSON INPUT -->
             <div id="input-pane-person" class="tab-pane">
               <div class="image-upload-wrapper">
                 <img id="person-img-preview" class="profile-img-preview hidden" src="" alt="Profile Preview">
-                <label for="person-image" class="btn-secondary" style="font-size: 0.8rem; display: inline-block; cursor: pointer;">Upload Portrait (< 100MB)</label>
+                <label for="person-image" class="btn-secondary" style="font-size: 0.85rem; display: inline-block; cursor: pointer; border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 6px;">Upload Portrait (< 5MB)</label>
                 <input type="file" id="person-image" class="hidden" accept="image/jpeg, image/png, image/webp">
               </div>
               <input type="text" id="person-name" class="input-minimal" placeholder="Name">
@@ -156,19 +156,17 @@
                 <input type="text" id="person-relation" class="input-minimal" placeholder="Relation / Role">
               </div>
               <div class="input-row">
-                <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes: Punjabi music, Qawwalis..."></textarea>
-                <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes: Chemistry..."></textarea>
+                <textarea id="person-likes" class="input-minimal list-textarea" placeholder="Likes: Karan Aujla, Nusrat Fateh Ali Khan..."></textarea>
+                <textarea id="person-dislikes" class="input-minimal list-textarea" placeholder="Dislikes: Ionic Equilibrium..."></textarea>
               </div>
             </div>
 
-            <!-- LORE INPUT -->
             <div id="input-pane-lore" class="tab-pane hidden">
               <input type="text" id="lore-title" class="input-minimal" placeholder="Concept / Title">
-              <input type="text" id="lore-category" class="input-minimal" placeholder="Category (e.g., Chess Strategies, Anime Analysis)">
+              <input type="text" id="lore-category" class="input-minimal" placeholder="Category (e.g., Oregairu Chronology, JEE Strategy)">
             </div>
 
-            <!-- SHARED DEEP DIVE TEXTAREA -->
-            <textarea id="codex-notes" class="journal-textarea modal-textarea" placeholder="Deep-dive notes, analysis, or life updates... (e.g., Analyzing the narrative pacing of Bungou Stray Dogs, or JEE mock test strategies)"></textarea>
+            <textarea id="codex-notes" class="journal-textarea modal-textarea" placeholder="Deep-dive analysis or notes..."></textarea>
             
             <div class="modal-actions">
               <button id="btn-save-codex" class="btn-primary">Save to Codex</button>
@@ -178,20 +176,19 @@
         </div>
       </section>
 
-      <!-- 3. LISTS & TASKS VIEW -->
+      <!-- 3. LISTS VIEW -->
       <section id="view-lists" class="view-section hidden">
         <div class="section-header">
           <h2 class="section-title">Lists</h2>
-          <button id="btn-add-list" class="btn-primary" style="width: auto;">+ New List</button>
+          <button id="btn-add-list" class="btn-primary" style="width: auto;">New List</button>
         </div>
         <div id="lists-container" class="masonry-grid"></div>
 
-        <!-- Add List Modal -->
         <div id="modal-list" class="modal hidden">
           <div class="modal-content">
-            <h3 class="modal-title">Create List</h3>
-            <input type="text" id="list-title" class="input-minimal" placeholder="e.g., College Preferences, Reading List...">
-            <input type="text" id="list-first-item" class="input-minimal" placeholder="First item (e.g., Hit 1600 ELO in chess)">
+            <h3 style="font-family: var(--font-reading); font-size: 2rem; font-weight: 500; margin-bottom: 24px;">Create List</h3>
+            <input type="text" id="list-title" class="input-minimal" placeholder="e.g., College Preferences (VNIT, MNIT...)">
+            <input type="text" id="list-first-item" class="input-minimal" placeholder="First item">
             <div class="modal-actions">
               <button id="btn-save-list" class="btn-primary">Create</button>
               <button id="btn-close-list" class="btn-secondary">Cancel</button>
@@ -200,35 +197,56 @@
         </div>
       </section>
 
-      <!-- 4. THOUGHTS & ARCHIVE VIEW -->
+      <!-- 4. THOUGHTS VIEW -->
       <section id="view-thoughts" class="view-section hidden">
-        <h2 class="section-title">Thoughts & Archive</h2>
+        <h2 class="section-title" style="margin-bottom: 30px;">Thoughts & Archive</h2>
         
-        <!-- Quick Capture Input -->
         <div class="quick-capture-box">
-          <textarea id="quick-thought-input" class="input-minimal" placeholder="Jot down a sudden philosophy, a poem, or a stray thought..." rows="2"></textarea>
+          <textarea id="quick-thought-input" class="input-minimal" placeholder="Jot down a sudden philosophy or a stray thought..." rows="2"></textarea>
           <button id="btn-save-thought" class="btn-primary" style="width: auto; align-self: flex-end;">Save</button>
         </div>
 
-        <div id="thoughts-feed" class="masonry-grid" style="margin-top: 30px;">
-          <!-- JS will populate user thoughts and daily archived quotes here -->
-        </div>
+        <div id="thoughts-feed" class="masonry-grid" style="margin-top: 40px;"></div>
       </section>
+      
+      <!-- 5. SETTINGS VIEW (Permanent Layout) -->
+      <section id="view-settings" class="view-section hidden">
+        <h2 class="section-title" style="margin-bottom: 40px;">Settings</h2>
+        
+        <div style="max-width: 600px;">
+          <!-- Theme Toggle -->
+          <div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 20px;">
+            <div>
+              <h3 style="font-weight: 500; margin-bottom: 4px;">Theme</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Toggle between light and dark modes.</p>
+            </div>
+            <button id="btn-theme-toggle" class="btn-secondary" style="border: 1px solid var(--border-light); padding: 8px 16px; border-radius: 6px;">
+              Toggle Day/Night
+            </button>
+          </div>
+          
+          <!-- Cloud Sync -->
+          <div style="margin-bottom: 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-light); padding-bottom: 20px;">
+            <div>
+              <h3 style="font-weight: 500; margin-bottom: 4px;">Cloud Sync</h3>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">Current connection status to Google Drive.</p>
+            </div>
+            <div id="cloud-indicator" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Status: Disconnected</div>
+          </div>
 
-      <!-- MASTER KEY CHANGE MODAL (Hidden) -->
-      <div id="modal-change-key" class="modal hidden">
-        <div class="modal-content">
-          <h3 class="modal-title">Change Master Key</h3>
-          <p class="subtitle" style="font-size: 0.85rem; margin-bottom: 20px;">This will safely download, decrypt, and re-encrypt your entire vault. Do not close the browser during this process.</p>
-          <input type="password" id="old-key" class="input-minimal" placeholder="Current Key">
-          <input type="password" id="new-key" class="input-minimal" placeholder="New Key">
-          <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Key">
-          <div class="modal-actions">
-            <button id="btn-confirm-key-change" class="btn-primary">Re-Encrypt Vault</button>
-            <button id="btn-cancel-key-change" class="btn-secondary">Cancel</button>
+          <!-- Cryptographic Engine -->
+          <div>
+            <h3 style="font-weight: 500; margin-bottom: 4px;">Cryptographic Core</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Safely decrypt and re-encrypt your entire vault with a new Master Key. Do not close the browser during this process.</p>
+            
+            <input type="password" id="old-key" class="input-minimal" placeholder="Current Key">
+            <input type="password" id="new-key" class="input-minimal" placeholder="New Key">
+            <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Key">
+            
+            <button id="btn-confirm-key-change" class="btn-primary" style="margin-top: 20px;">Re-Encrypt Vault</button>
           </div>
         </div>
-      </div>
+      </section>
 
     </main>
   </div>
