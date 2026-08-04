@@ -217,7 +217,7 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
-// --- REFINED SNOW & WIND PHYSICS ENGINE ---
+// ---// --- REFINED SNOW & WIND PHYSICS ENGINE ---
 const initSnowAndWind = () => {
   const canvas = document.getElementById('snow-canvas');
   if (!canvas) return;
@@ -235,27 +235,32 @@ const initSnowAndWind = () => {
   let wind = 0; 
   let targetWind = 0;
 
-  for (let i = 0; i < 40; i++) { 
+  // Increased particle count for a dense, grainy snowfall
+  for (let i = 0; i < 160; i++) { 
     snowflakes.push({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 1.5 + 0.5, 
-      speedY: Math.random() * 0.8 + 0.2, 
-      opacity: Math.random() * 0.5 + 0.1
+      radius: Math.random() * 2 + 0.5, // Depth variation
+      speedY: Math.random() * 2.5 + 1.5, // Faster, definitive downward fall
+      opacity: Math.random() * 0.7 + 0.2, // Higher visibility
+      sway: Math.random() * Math.PI * 2, // Individual flutter offset
+      swaySpeed: Math.random() * 0.02 + 0.01 // Speed of the flutter
     });
   }
 
+  // Wind shifts occasionally, but gravity remains dominant
   setInterval(() => {
-    targetWind = (Math.random() * 3) - 1.5; 
-  }, 5000);
+    targetWind = (Math.random() * 2) - 1; 
+  }, 4000);
 
   const animateSnow = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     
-    ctx.fillStyle = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(150, 180, 210, 0.4)';
+    // High-contrast frosted blue for light mode, crisp white for dark mode
+    ctx.fillStyle = isDark ? 'rgba(240, 248, 255, 0.65)' : 'rgba(130, 160, 200, 0.75)';
 
-    wind += (targetWind - wind) * 0.01; 
+    wind += (targetWind - wind) * 0.02; // Smooth wind transitions
 
     snowflakes.forEach(flake => {
       ctx.beginPath();
@@ -263,15 +268,20 @@ const initSnowAndWind = () => {
       ctx.globalAlpha = flake.opacity;
       ctx.fill();
 
+      // Update position: Gravity + Wind + Individual flutter
       flake.y += flake.speedY;
-      flake.x += wind + (Math.random() * 0.2 - 0.1); 
+      flake.sway += flake.swaySpeed;
+      flake.x += wind + Math.sin(flake.sway) * 0.6; 
 
+      // Seamlessly wrap particles back to the top
       if (flake.y > canvas.height) {
         flake.y = -5;
         flake.x = Math.random() * canvas.width;
       }
-      if (flake.x > canvas.width) flake.x = 0;
-      if (flake.x < 0) flake.x = canvas.width;
+      
+      // Wrap horizontally for strong winds
+      if (flake.x > canvas.width + 10) flake.x = -10;
+      if (flake.x < -10) flake.x = canvas.width + 10;
     });
 
     ctx.globalAlpha = 1;
@@ -280,6 +290,7 @@ const initSnowAndWind = () => {
   animateSnow();
 };
 
+  
 // --- INITIALIZATION ---
 const initUI = () => {
   if (els.currentDateDisplay) {
