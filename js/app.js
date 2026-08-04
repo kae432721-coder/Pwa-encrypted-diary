@@ -2,10 +2,16 @@
 
 
 const getDailyQuote = () => {
+const getDailyQuote = () => {
+  // FAILSAFE: If quotes.js didn't load properly, show a default instead of crashing
+  if (typeof sanctuaryQuotes === 'undefined' || sanctuaryQuotes.length === 0) {
+    return { text: "The vault is currently silent.", author: "Sanctuary OS" };
+  }
   const today = Math.floor(Date.now() / 86400000); 
   const quoteIndex = today % sanctuaryQuotes.length;
   return sanctuaryQuotes[quoteIndex];
 };
+
 
 // --- DOM ELEMENTS ---
 const els = {
