@@ -62,7 +62,6 @@ const toggleTheme = () => {
 if (els.btnThemeToggle) els.btnThemeToggle.addEventListener('click', toggleTheme);
 if (els.btnThemeIcon) els.btnThemeIcon.addEventListener('click', toggleTheme);
 
-
 // --- FULL WORKSPACE DOUBLE-SLIDE CONTROLS ---
 if (els.btnToggleSidebar) {
   els.btnToggleSidebar.addEventListener('click', () => {
@@ -217,63 +216,48 @@ const initOrbs = () => {
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 };
 
-// --- ULTRA-REAL SNOW PHYSICS ENGINE ---
-// --- ULTRA-REAL HEXAGONAL SNOW PHYSICS ENGINE ---
+// --- ILLUMINATED HEXAGONAL SNOW PHYSICS ENGINE ---
 const initSnowAndWind = () => {
   const canvas = document.getElementById('snow-canvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   
-  // 1. HIGH-DPI SCALING FOR RAZOR-SHARP EDGES
   const resizeCanvas = () => {
     const container = canvas.parentElement;
     const dpi = window.devicePixelRatio || 1;
-    
-    // Set actual internal memory size to screen DPI
     canvas.width = container.clientWidth * dpi;
     canvas.height = container.clientHeight * dpi;
-    
-    // Normalize coordinate system to scale
     ctx.scale(dpi, dpi);
   };
   resizeCanvas();
   window.addEventListener('resize', resizeCanvas);
 
   let snowflakes = [];
-  let globalWind = 0; 
-  let targetWind = 0;
+  let globalWind = 1; // Start with a steady breeze
+  let targetWind = 1;
 
-  // 2. BUILD THE VOLUMETRIC PARALLAX FIELD
+  // Build the volumetric field
   for (let i = 0; i < 150; i++) { 
-    const depth = Math.random() * 100 + 1; // Z-axis: 1 (far bg) to 100 (close fg)
-    
+    const depth = Math.random() * 100 + 1; 
     snowflakes.push({
       x: Math.random() * (canvas.width / (window.devicePixelRatio || 1)),
       y: Math.random() * (canvas.height / (window.devicePixelRatio || 1)),
       depth: depth,
-      
-      // True Optics: Closer = larger, further = microscopic
       radius: (depth / 100) * 2.5 + 0.8, 
-      
-      // True Gravity: Mass dictates falling terminal velocity
       mass: (depth / 100) * 1.5 + 0.5,
-      
-      // True Kinematics: Tumbling rotation
       angle: Math.random() * Math.PI * 2,
       rotationSpeed: (Math.random() - 0.5) * 0.05
     });
   }
 
-  // Unified weather front shift
+  // Weather system: Occasional, extremely slow transitions (every 18 seconds)
   setInterval(() => {
-    targetWind = (Math.random() * 2) - 1; 
-  }, 7000);
+    targetWind = (Math.random() * 2.5) - 1.25; 
+  }, 18000);
 
-  // Custom Hexagon Drawing Function
   const drawHexagon = (x, y, radius, angle) => {
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
-      // Calculate the 6 geometric points of the hexagon using trigonometry
       const currentAngle = angle + (i * Math.PI / 3); 
       const px = x + radius * Math.cos(currentAngle);
       const py = y + radius * Math.sin(currentAngle);
@@ -285,7 +269,6 @@ const initSnowAndWind = () => {
   };
 
   const animateSnow = () => {
-    // Determine logical width/height based on DPI
     const dpi = window.devicePixelRatio || 1;
     const logicalWidth = canvas.width / dpi;
     const logicalHeight = canvas.height / dpi;
@@ -293,33 +276,70 @@ const initSnowAndWind = () => {
     ctx.clearRect(0, 0, logicalWidth, logicalHeight);
     const isDark = document.body.getAttribute('data-theme') === 'dark';
     
-    // Day mode: Soft icy slate. Night mode: Crisp pure white.
-    ctx.fillStyle = isDark ? '#ffffff' : '#a2b4c7';
+    // Light Source Configuration (Top Left)
+    const lightX = logicalWidth * 0.3;
+    const lightY = logicalHeight * 0.15;
+    const lightRadius = 350;
 
-    // Global unified wind force
-    globalWind += (targetWind - globalWind) * 0.005; 
+    // Draw the ambient streetlamp glow in Day Mode
+    if (!isDark) {
+      const gradient = ctx.createRadialGradient(lightX, lightY, 0, lightX, lightY, lightRadius);
+      gradient.addColorStop(0, 'rgba(255, 235, 153, 0.15)'); // Warm glowing center
+      gradient.addColorStop(1, 'rgba(255, 235, 153, 0)');    // Fades into the white background
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, logicalWidth, logicalHeight);
+    }
+
+    // Ultra-slow smooth interpolation for the wind vector
+    globalWind += (targetWind - globalWind) * 0.0015; 
 
     snowflakes.forEach(flake => {
-      // Depth of Field Optics
-      const baseOpacity = isDark ? 0.9 : 0.7;
-      ctx.globalAlpha = (flake.depth / 100) * baseOpacity + 0.1;
+      // Default Base Optics
+      let r = isDark ? 255 : 162;
+      let g = isDark ? 255 : 180;
+      let b = isDark ? 255 : 199;
+      let baseOpacity = (flake.depth / 100) * (isDark ? 0.9 : 0.7) + 0.1;
+
+      // Dynamic Illumination Engine (Only triggers in Day Mode)
+      if (!isDark) {
+        const dx = flake.x - lightX;
+        const dy = flake.y - lightY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < lightRadius) {
+          // Calculate how close the flake is to the center of the light bulb (0 to 1)
+          const intensity = 1 - (distance / lightRadius);
+          
+          // Interpolate RGB from Slate-Blue (162, 180, 199) to Streetlamp Warm Amber (255, 220, 120)
+          r = Math.floor(162 + (255 - 162) * (intensity * 1.2));
+          g = Math.floor(180 + (220 - 180) * (intensity * 1.2));
+          b = Math.floor(199 + (120 - 199) * (intensity * 1.2));
+          
+          // Clamp RGB values
+          r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+          
+          // Spike the opacity as it passes through the beam
+          baseOpacity = Math.min(1, baseOpacity + (intensity * 0.6));
+        }
+      }
+
+      ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
+      ctx.globalAlpha = baseOpacity;
       
-      // Draw the tumbling geometric hexagon
       drawHexagon(flake.x, flake.y, flake.radius, flake.angle);
 
-      // Apply unified Newtonian forces
-      flake.y += flake.mass; // Gravity 
-      flake.angle += flake.rotationSpeed; // Tumble
+      // Kinematics: Gravity & Tumbling
+      flake.y += flake.mass; 
+      flake.angle += flake.rotationSpeed; 
       
-      // Wind pushes everything the same direction, but lighter/farther flakes drift differently than heavy ones
-      flake.x += globalWind * (1.5 - (flake.depth / 100)); 
+      // Wind: Parallax effect dictates that closer (heavier) flakes cover more horizontal ground
+      flake.x += globalWind * flake.mass; 
 
-      // Infinite loop boundaries
+      // Boundary Loops
       if (flake.y > logicalHeight + 10) {
         flake.y = -10;
         flake.x = Math.random() * logicalWidth;
       }
-      
       if (flake.x > logicalWidth + 10) flake.x = -10;
       if (flake.x < -10) flake.x = logicalWidth + 10;
     });
@@ -330,8 +350,6 @@ const initSnowAndWind = () => {
   animateSnow();
 };
 
-
-  
 // --- INITIALIZATION ---
 const initUI = () => {
   if (els.currentDateDisplay) {
