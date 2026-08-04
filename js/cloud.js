@@ -9,9 +9,9 @@ let isCloudReady = false;
 
 let sanctuaryData = {
   journal: [],
-  codex: [], // Merged People & Lore
+  codex: [], 
   lists: [],
-  thoughts: [] // Merged Quotes and Quick Thoughts
+  thoughts: [] 
 };
 
 // --- CRYPTOGRAPHY ENGINE (AES-GCM 256) ---
@@ -66,7 +66,6 @@ async function decryptText(packedBase64, key) {
 }
 
 // --- IMAGE COMPRESSOR & BASE64 ENCODER ---
-// Converts uploaded images into highly compressed text strings to encrypt and store inside the JSON
 window.compressImage = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -76,7 +75,7 @@ window.compressImage = (file) => {
       img.src = event.target.result;
       img.onload = () => {
         const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 800; // Cap width to prevent massive file bloat
+        const MAX_WIDTH = 800; 
         const MAX_HEIGHT = 800;
         let width = img.width;
         let height = img.height;
@@ -90,7 +89,6 @@ window.compressImage = (file) => {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
-        // Compress as JPEG at 70% quality
         resolve(canvas.toDataURL('image/jpeg', 0.7));
       };
     };
@@ -127,7 +125,7 @@ window.pushToDrive = async () => {
   const indicator = document.getElementById('cloud-indicator');
   
   try {
-    if (indicator) indicator.innerText = "Cloud: Syncing...";
+    if (indicator) indicator.innerText = "Status: Syncing...";
     const encryptedPayload = await encryptText(JSON.stringify(sanctuaryData), activeKey);
     const contentStr = JSON.stringify({ payload: encryptedPayload });
 
@@ -141,9 +139,9 @@ window.pushToDrive = async () => {
        });
        if (!res.ok) throw new Error("Drive upload failed");
     }
-    if (indicator) indicator.innerText = "Cloud: Synced";
+    if (indicator) indicator.innerText = "Status: Synced";
   } catch (err) {
-    if (indicator) indicator.innerText = "Cloud: Sync Failed";
+    if (indicator) indicator.innerText = "Status: Sync Failed";
     console.error("Push Error:", err);
   }
 };
@@ -163,49 +161,42 @@ const pullFromDrive = async () => {
   }
 };
 
-// --- MASTER KEY CHANGE LOGIC ---
-document.getElementById('btn-change-password').addEventListener('click', () => {
-  document.getElementById('modal-change-key').classList.remove('hidden');
-});
-document.getElementById('btn-cancel-key-change').addEventListener('click', () => {
-  document.getElementById('modal-change-key').classList.add('hidden');
-  document.getElementById('old-key').value = '';
-  document.getElementById('new-key').value = '';
-  document.getElementById('new-key-confirm').value = '';
-});
-
-document.getElementById('btn-confirm-key-change').addEventListener('click', async () => {
-  const oldKey = document.getElementById('old-key').value.trim();
-  const newKey = document.getElementById('new-key').value.trim();
-  const newKeyConfirm = document.getElementById('new-key-confirm').value.trim();
-  
-  if (oldKey !== activeKey) { alert("Current Key is incorrect."); return; }
-  if (!newKey || newKey !== newKeyConfirm) { alert("New keys do not match."); return; }
-  
-  const btn = document.getElementById('btn-confirm-key-change');
-  btn.innerText = "Re-encrypting Vault...";
-  btn.disabled = true;
-
-  try {
-    // 1. Temporarily set active key to new key
-    activeKey = newKey;
-    // 2. Force a full push to drive using the new key
-    await window.pushToDrive();
+// --- MASTER KEY CHANGE LOGIC (New Settings Page Layout) ---
+const btnConfirmKeyChange = document.getElementById('btn-confirm-key-change');
+if(btnConfirmKeyChange) {
+  btnConfirmKeyChange.addEventListener('click', async () => {
+    const oldKey = document.getElementById('old-key').value.trim();
+    const newKey = document.getElementById('new-key').value.trim();
+    const newKeyConfirm = document.getElementById('new-key-confirm').value.trim();
     
-    alert("Master Key successfully changed. Your vault has been re-encrypted.");
-    document.getElementById('btn-cancel-key-change').click();
-  } catch (err) {
-    alert("Failed to change key. Connection error.");
-    activeKey = oldKey; // Revert on failure
-  }
-  btn.innerText = "Re-Encrypt Vault";
-  btn.disabled = false;
-});
-// --- AUTHENTICATION FLOW ---
-let tokenClient = null;
+    if (oldKey !== activeKey) { alert("Current Key is incorrect."); return; }
+    if (!newKey || newKey !== newKeyConfirm) { alert("New keys do not match."); return; }
+    
+    btnConfirmKeyChange.innerText = "Re-encrypting Vault...";
+    btnConfirmKeyChange.disabled = true;
 
-const initializeGoogleAuth = () => {
-  if (typeof google !== 'undefined' && google.accounts && google.accounts.oauth2) {
+    try {
+      activeKey = newKey;
+      await window.pushToDrive();
+      alert("Master Key successfully changed. Your vault has been re-encrypted.");
+      document.getElementById('old-key').value = '';
+      document.getElementById('new-key').value = '';
+      document.getElementById('new-key-confirm').value = '';
+    } catch (err) {
+      alert("Failed to change key. Connection error.");
+      activeKey = oldKey; // Revert on failure
+    }
+    btnConfirmKeyChange.innerText = "Re-Encrypt Vault";
+    btnConfirmKeyChange.disabled = false;
+  });
+}
+
+// --- AUTHENTICATION FLOW ---
+let tokenClient;
+
+window.onload = function () {
+  // Ensure the Google Identity Script has loaded before initializing
+  if (window.google && google.accounts) {
     tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
       scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/userinfo.email',
@@ -229,28 +220,60 @@ const initializeGoogleAuth = () => {
         }
       }
     });
-    return true;
+  } else {
+    console.error("Google Identity Services script not loaded.");
   }
-  return false;
 };
 
-// Try initializing immediately, or wait for window load
-window.addEventListener('load', () => {
-  if (!initializeGoogleAuth()) {
-    // Fallback timer if script is slightly delayed by network
-    setTimeout(initializeGoogleAuth, 1000);
-  }
-});
-
-document.getElementById('btn-google-login').addEventListener('click', () => {
-  if (!tokenClient) {
-    // Force try initialization if user clicks before window load completed
-    const initialized = initializeGoogleAuth();
-    if (!initialized) {
-      alert("Google Identity Services script is still loading or blocked by an ad-blocker. Please refresh the page.");
-      return;
+const btnGoogleLogin = document.getElementById('btn-google-login');
+if(btnGoogleLogin) {
+  btnGoogleLogin.addEventListener('click', () => {
+    if (tokenClient) {
+      tokenClient.requestAccessToken();
+    } else {
+      alert("Google Secure Login is still initializing or was blocked by your browser. Ensure you are running on localhost.");
     }
-  }
-  tokenClient.requestAccessToken();
-});
+  });
+}
 
+const btnUnlock = document.getElementById('btn-unlock');
+if(btnUnlock) {
+  btnUnlock.addEventListener('click', async () => {
+    const passInput = document.getElementById('diary-password');
+    const pass = passInput.value.trim();
+    if (!pass) return;
+    
+    activeKey = pass;
+    btnUnlock.innerText = "Verifying Vault...";
+    btnUnlock.disabled = true;
+
+    try {
+      gDriveFileId = await findDriveFile();
+      
+      if (gDriveFileId) {
+        await pullFromDrive();
+      } else {
+        isCloudReady = true; 
+        await window.pushToDrive();
+      }
+      
+      isCloudReady = true; 
+      
+      document.getElementById('auth-screen').classList.add('hidden');
+      document.getElementById('quote-screen').classList.remove('hidden');
+      
+      window.dispatchEvent(new Event('cloudDataLoaded'));
+      
+    } catch (err) {
+      if (err.message === "DECRYPTION_FAILED") {
+        alert("Incorrect key for this sanctuary.");
+        passInput.value = "";
+      } else {
+        alert("Network error establishing secure connection.");
+        console.error(err);
+      }
+      btnUnlock.innerText = "Unlock Vault";
+      btnUnlock.disabled = false;
+    }
+  });
+}
