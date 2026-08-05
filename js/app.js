@@ -561,7 +561,7 @@ const initSnowAndWind = () => {
   animateWeather();
 };
 
-// --- INITIALIZATION ---
+// --- INITIALIZATION & SESSION STORAGE ---
 const initUI = () => {
   if (els.currentDateDisplay) {
     const now = new Date();
@@ -575,10 +575,21 @@ const initUI = () => {
     window.currentDailyQuote = dailyQuote;
     window.currentDailyQuote.liked = false;
   }
+
+  // SESSION STORAGE: If already unlocked, skip the quote screen entirely!
+  if (sessionStorage.getItem('sanctuaryUnlocked') === 'true') {
+    els.quoteScreen.classList.add('hidden');
+    els.mainWorkspace.classList.remove('hidden');
+    els.mainWorkspace.style.opacity = '1';
+    window.dispatchEvent(new Event('resize'));
+  }
 };
 
 if (els.btnEnterSanctuary) {
   els.btnEnterSanctuary.addEventListener('click', () => {
+    // Save the unlock state to the browser's temporary memory
+    sessionStorage.setItem('sanctuaryUnlocked', 'true');
+    
     els.quoteScreen.style.opacity = '0';
     setTimeout(() => {
       els.quoteScreen.classList.add('hidden');
@@ -586,13 +597,13 @@ if (els.btnEnterSanctuary) {
       els.mainWorkspace.style.opacity = '0';
       setTimeout(() => els.mainWorkspace.style.opacity = '1', 50);
       els.mainWorkspace.style.transition = 'opacity 0.8s ease';
-      
       window.dispatchEvent(new Event('resize'));
     }, 1000);
   });
 }
 
 initUI();
+
 initOrbs();
 initSnowAndWind();
                                     
