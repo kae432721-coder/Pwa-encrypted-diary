@@ -53,100 +53,6 @@ const els = {
   entryBody: document.getElementById('entry-body')
 };
 
-// --- AUTHENTICATION & SESSION MANAGEMENT ---
-const btnUnlock = document.getElementById('btn-unlock');
-const passwordInput = document.getElementById('diary-password');
-
-// 1. SESSION CHECK: Are you already logged in for this browser session?
-if (sessionStorage.getItem('sanctuary_unlocked') === 'true') {
-  els.authScreen.classList.add('hidden');
-  els.mainWorkspace.classList.remove('hidden'); 
-}
-
-// 2. THE LOGIN / SETUP PROCESS
-if (btnUnlock && passwordInput) {
-  // Check if this is the user's very first time here
-  const isFirstTime = !localStorage.getItem('sanctuary_password');
-  
-  if (isFirstTime) {
-    passwordInput.placeholder = "Create your password...";
-    btnUnlock.textContent = "Set Password & Enter";
-  }
-
-  btnUnlock.addEventListener('click', () => {
-    const enteredText = passwordInput.value.trim();
-    if (!enteredText) return; // Don't allow empty passwords
-
-    if (isFirstTime) {
-      // FIRST TIME: Save their brand new password permanently
-      localStorage.setItem('sanctuary_password', enteredText);
-      unlockApp();
-    } else {
-      // RETURNING USER: Check against their saved password
-      const savedPassword = localStorage.getItem('sanctuary_password');
-      if (enteredText === savedPassword) {
-        unlockApp();
-      } else {
-        // Wrong password visual feedback
-        passwordInput.style.borderBottomColor = 'var(--danger-color)';
-        passwordInput.value = '';
-        passwordInput.placeholder = 'Incorrect password...';
-        
-        setTimeout(() => {
-          passwordInput.style.borderBottomColor = 'var(--border-light)';
-          passwordInput.placeholder = 'Enter your password...';
-        }, 2000);
-      }
-    }
-  });
-
-  // Allow pressing "Enter" on the keyboard
-  passwordInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      btnUnlock.click();
-    }
-  });
-}
-
-function unlockApp() {
-  // Give them a temporary 'Session' key
-  sessionStorage.setItem('sanctuary_unlocked', 'true');
-  
-  els.authScreen.style.opacity = '0';
-  els.authScreen.style.transition = 'opacity 0.8s ease';
-  
-  setTimeout(() => {
-    els.authScreen.classList.add('hidden');
-    els.quoteScreen.classList.remove('hidden');
-    
-    els.quoteScreen.style.opacity = '0';
-    setTimeout(() => els.quoteScreen.style.opacity = '1', 50);
-    els.quoteScreen.style.transition = 'opacity 0.8s ease';
-    
-    // Automatically change the UI for next time they log out
-    passwordInput.placeholder = "Enter your password...";
-    btnUnlock.textContent = "Open Journal";
-    passwordInput.value = '';
-    
-    // Refresh the page slightly to ensure First-Time setup changes UI immediately
-    if (!localStorage.getItem('sanctuary_setup_complete')) {
-       localStorage.setItem('sanctuary_setup_complete', 'true');
-       location.reload();
-    }
-  }, 800);
-}
-
-// --- LOCK VAULT TOGGLE ---
-const btnLockDiary = document.getElementById('btn-lock-diary');
-if (btnLockDiary) {
-  btnLockDiary.addEventListener('click', () => { 
-    // Erase temporary memory and reset to lock screen
-    sessionStorage.removeItem('sanctuary_unlocked');
-    window.location.reload(); 
-  });
-}
-
 // --- THEME ENGINE ---
 const toggleTheme = () => {
   const currentTheme = document.body.getAttribute('data-theme');
@@ -183,6 +89,12 @@ if (els.btnNewEntry) {
   });
 }
 
+// --- LOCK VAULT TOGGLE ---
+const btnLockDiary = document.getElementById('btn-lock-diary');
+if (btnLockDiary) {
+  btnLockDiary.addEventListener('click', () => { window.location.reload(); });
+}
+
 // --- WORKSPACE NAVIGATION ---
 els.navItems.forEach(item => {
   item.addEventListener('click', (e) => {
@@ -213,6 +125,8 @@ els.toolbarBtns.forEach(btn => {
     if (typeof window.triggerModuleAutosave === 'function') window.triggerModuleAutosave();
   });
 });
+
+
 
 // --- QUOTE LIKE BUTTON LOGIC ---
 if (els.btnLikeQuote) {
@@ -412,6 +326,7 @@ const initSnowAndWind = () => {
         ctx.moveTo(flake.x, flake.y);
         ctx.lineTo(flake.x - (vx * 1.2), flake.y - (vy * 1.2));
         
+        // FIXED TYPO: Properly injected variables so they render correctly
         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${baseOpacity})`;
         
         ctx.lineWidth = flake.snowRadius;
@@ -548,42 +463,8 @@ if (birthdateInput && ageInput) {
     ageInput.value = age;
   });
 }
-
-// --- CHANGE PASSWORD (SETTINGS PAGE) ---
-const btnConfirmKeyChange = document.getElementById('btn-confirm-key-change');
-const oldKeyInput = document.getElementById('old-key');
-const newKeyInput = document.getElementById('new-key');
-const newKeyConfirm = document.getElementById('new-key-confirm');
-
-if (btnConfirmKeyChange) {
-  btnConfirmKeyChange.addEventListener('click', () => {
-    const currentSaved = localStorage.getItem('sanctuary_password');
-    
-    if (oldKeyInput.value !== currentSaved) {
-      alert('Current password is incorrect.');
-      return;
-    }
-    if (newKeyInput.value !== newKeyConfirm.value) {
-      alert('New passwords do not match.');
-      return;
-    }
-    if (newKeyInput.value.trim() === '') {
-      alert('Password cannot be empty.');
-      return;
-    }
-    
-    // Save the new password
-    localStorage.setItem('sanctuary_password', newKeyInput.value.trim());
-    alert('Password successfully updated!');
-    
-    // Clear inputs
-    oldKeyInput.value = '';
-    newKeyInput.value = '';
-    newKeyConfirm.value = '';
-  });
-}
-
 // --- CSS OVERRIDE: FORCE SLEEK DELETE BUTTONS ---
+// This injects the styles dynamically, bypassing the browser's CSS cache
 const styleFix = document.createElement('style');
 styleFix.innerHTML = `
   #lists-container button,
