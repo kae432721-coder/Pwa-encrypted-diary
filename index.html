@@ -25,20 +25,20 @@
     <canvas id="orbs-canvas"></canvas>
     <div class="auth-card">
       <h1 class="title-elegant">Sanctuary</h1>
-      <p class="subtitle">A secure operating system for your mind.</p>
+      <p class="subtitle">A digital space for your thoughts.</p>
       
       <div id="step-google">
         <button id="btn-google-login" class="btn-primary" style="margin-bottom: 20px;">Sign in with Google</button>
         <div style="margin-top: 20px; border-top: 1px solid var(--border-light); padding-top: 20px;">
-          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Unrecognized Identity?</p>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Are you new here?</p>
           <a href="mailto:owner@example.com?subject=Sanctuary%20Access%20Request&body=I%20am%20requesting%20authentication%20to%20enter%20the%20Sanctuary." class="btn-secondary" style="text-decoration: none; font-size: 0.85rem;">Request Access</a>
         </div>
       </div>
       
       <div id="step-password" class="hidden">
         <p class="user-greeting" id="user-email-display" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 20px;"></p>
-        <input type="password" id="diary-password" placeholder="Enter your Master Key..." class="input-minimal" autocomplete="off" />
-        <button id="btn-unlock" class="btn-primary">Unlock Vault</button>
+        <input type="password" id="diary-password" placeholder="Enter your Password..." class="input-minimal" autocomplete="off" />
+        <button id="btn-unlock" class="btn-primary">Unlock Journal</button>
       </div>
     </div>
   </div>
@@ -102,7 +102,7 @@
           <button id="btn-theme-toggle-icon" class="icon-btn" title="Toggle Day/Night">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
           </button>
-          <button id="btn-lock-diary" class="icon-btn" title="Lock Vault">
+          <button id="btn-lock-diary" class="icon-btn" title="Lock Journal">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
           </button>
         </div>
@@ -250,17 +250,18 @@
             <div id="cloud-indicator" style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">Status: Disconnected</div>
           </div>
 
-          <!-- Cryptographic Engine -->
-          <div>
-            <h3 style="font-weight: 500; margin-bottom: 4px;">Cryptographic Core</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Safely decrypt and re-encrypt your entire vault with a new Master Key. Do not close the browser during this process.</p>
-            
-            <input type="password" id="old-key" class="input-minimal" placeholder="Current Key">
-            <input type="password" id="new-key" class="input-minimal" placeholder="New Key">
-            <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Key">
-            
-            <button id="btn-confirm-key-change" class="btn-primary" style="margin-top: 20px;">Re-Encrypt Vault</button>
-          </div>
+              <!-- Security Settings -->
+    <div>
+      <h3 style="font-weight: 500; margin-bottom: 4px;">Security</h3>
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 24px;">Update your password to keep your journal safe. Do not close the browser while saving.</p>
+      
+      <input type="password" id="old-key" class="input-minimal" placeholder="Current Password">
+      <input type="password" id="new-key" class="input-minimal" placeholder="New Password">
+      <input type="password" id="new-key-confirm" class="input-minimal" placeholder="Confirm New Password">
+      
+      <button id="btn-confirm-key-change" class="btn-primary" style="margin-top: 20px;">Change Password</button>
+    </div>
+
         </div>
       </section>
 
