@@ -257,28 +257,55 @@ if(btnSaveCodex) {
 }
 
 // --- 3. LISTS MODULE ---
+// --- 3. LISTS MODULE ---
 const renderLists = () => {
   const container = document.getElementById('lists-container');
   if(!container) return;
   container.innerHTML = '';
+
   if (!sanctuaryData.lists) sanctuaryData.lists = [];
 
   sanctuaryData.lists.forEach(list => {
     const card = document.createElement('div');
     card.className = 'card';
     card.style.cursor = 'default';
-    
+
     let itemsHtml = '<ul class="checklist">';
+
+    // 1. Render INCOMPLETE items first
     list.items.forEach((item, index) => {
-      itemsHtml += `
-        <li class="check-item ${item.done ? 'done' : ''}">
-          <div class="check-box ${item.done ? 'done' : ''}" onclick="toggleListItem('${list.id}', ${index})">
-             ${item.done ? '✓' : ''}
-          </div>
-          <span>${item.text}</span>
-        </li>
-      `;
+      if (!item.done) {
+        itemsHtml += `
+          <li class="check-item">
+            <div class="check-box" onclick="toggleListItem('${list.id}', ${index})"></div>
+            <span>${item.text}</span>
+          </li>
+        `;
+      }
     });
+
+    // 2. Render Divider if there are completed items
+    const completedCount = list.items.filter(item => item.done).length;
+    if (completedCount > 0) {
+      itemsHtml += `
+        <div style="margin: 15px 0 10px 0; border-top: 1px solid var(--border-light); padding-top: 10px; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">
+          ${completedCount} Completed
+        </div>
+      `;
+    }
+
+    // 3. Render COMPLETED items at the bottom
+    list.items.forEach((item, index) => {
+      if (item.done) {
+        itemsHtml += `
+          <li class="check-item done" style="opacity: 0.6; text-decoration: line-through;">
+            <div class="check-box done" onclick="toggleListItem('${list.id}', ${index})">✓</div>
+            <span>${item.text}</span>
+          </li>
+        `;
+      }
+    });
+
     itemsHtml += '</ul>';
 
     card.innerHTML = `
@@ -292,6 +319,7 @@ const renderLists = () => {
     container.appendChild(card);
   });
 };
+
 
 window.toggleListItem = (listId, itemIndex) => {
   const list = sanctuaryData.lists.find(l => l.id === listId);
