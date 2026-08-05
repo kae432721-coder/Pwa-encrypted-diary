@@ -394,35 +394,6 @@ const initSnowAndWind = () => {
   let globalWind = 1.5; 
   let targetWind = 1.5;
 
-   // --- NEW: PETAL BLAST RADIUS INTERACTION ---
-  window.addEventListener('click', (e) => {
-    // Only trigger in light mode
-    if (document.body.getAttribute('data-theme') === 'dark') return;
-
-    // Adjust click coordinates to match the high-res canvas scale
-    const clickX = e.clientX * dpi;
-    const clickY = e.clientY * dpi;
-    const blastRadius = 250 * dpi; // How wide the clearing effect is
-
-    fallenPetals.forEach(p => {
-      // Calculate distance from the tap to the petal
-      const dx = p.x - clickX;
-      const dy = p.y - clickY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // If the petal is within the blast radius and hasn't been blown away yet
-      if (distance < blastRadius && !p.blownAway) {
-        p.blownAway = true;
-        p.vy = (Math.random() * 3) + 2; // Gravity (falling down)
-        p.vx = (dx / distance) * (Math.random() * 6); // Push outward from the click center
-        p.spinSpeed = (Math.random() - 0.5) * 0.2; // Tumble speed
-        p.waveOffset = Math.random() * Math.PI * 2; // Sine wave starting point
-      }
-    });
-  });
-  // -------------------------------------------
- 
-
   for (let i = 0; i < 1200; i++) { 
     const depth = Math.random() * 100 + 1; 
     particles.push({
@@ -530,45 +501,16 @@ const initSnowAndWind = () => {
       // The Stationary Virtual Margin (Floor) - Piles up 60px above the bottom of the screen
       const floorY = logicalHeight - 60; 
 
-            // The Stationary Virtual Margin (Floor) - Piles up 60px above the bottom of the screen
-      const floorY = logicalHeight - 60;
-      
-      // --- UPGRADED FALLEN PETALS RENDERER ---
-      // We loop backwards so we can safely delete petals that fall off the screen
-      for (let i = fallenPetals.length - 1; i >= 0; i--) {
-        let p = fallenPetals[i];
-
-        // If the user clicked near this petal, animate its fall
-        if (p.blownAway) {
-          p.y += p.vy; // Fall down
-          p.x += p.vx + (Math.sin(p.waveOffset) * 2.5); // Move out + Sine Wave Flutter
-          p.waveOffset += 0.05;
-          p.angle += p.spinSpeed; // Spin while falling
-
-          // If it falls completely off the screen, delete it to save memory
-          if (p.y > logicalHeight + 50) {
-            fallenPetals.splice(i, 1);
-            continue; 
-          }
-        }
-
+      fallenPetals.forEach(p => {
         ctx.save();
         ctx.translate(p.x, p.y);
         ctx.rotate(p.angle);
-        
-        // Add a 3D tumbling effect if it is falling
-        if (p.blownAway) {
-            ctx.scale(Math.sin(p.waveOffset * 1.5), 1);
-        }
-
         ctx.beginPath();
         ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
         ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
         ctx.fill();
         ctx.restore();
-      }
-      // ---------------------------------------
-
+      });
 
       particles.forEach((petal, index) => {
         if (index > 350) return; 
@@ -724,4 +666,3 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
-
