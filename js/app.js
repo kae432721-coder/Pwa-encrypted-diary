@@ -1,7 +1,7 @@
-
-// --- SANCTUARY ARCHIVES: QUOTES DATABASE ---
+// --- QUOTE OF THE DAY ENGINE ---
 const sanctuaryQuotes = [
-  // THE LITERARY STRAY DOGS
+  { id: 'q1', text: "The soul becomes dyed with the colour of its thoughts.", author: "Marcus Aurelius" },
+    // THE LITERARY STRAY DOGS
   { id: 'q1', text: "Mine has been a life of much shame.", author: "Osamu Dazai" },
   { id: 'q2', text: "Now I have neither happiness nor unhappiness. Everything passes.", author: "Osamu Dazai" },
   { id: 'q3', text: "The weak fear happiness itself. They can harm themselves on cotton wool.", author: "Osamu Dazai" },
@@ -176,13 +176,11 @@ const sanctuaryQuotes = [
   { id: 'q150', text: "The wound is the place where the Light enters you.", author: "Rumi" }
 ];
 
-// --- QUOTE OF THE DAY ENGINE ---
 const getDailyQuote = () => {
   const today = Math.floor(Date.now() / 86400000); 
   const quoteIndex = today % sanctuaryQuotes.length;
   return sanctuaryQuotes[quoteIndex];
 };
-
 
 // --- DOM ELEMENTS ---
 const els = {
