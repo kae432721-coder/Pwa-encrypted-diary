@@ -210,9 +210,14 @@ const els = {
 
 // --- THEME ENGINE ---
 const toggleTheme = () => {
-  const currentTheme = document.body.getAttribute('data-theme');
-  document.body.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+  const next = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  document.body.setAttribute('data-theme', next);
+  try { localStorage.setItem('sanctuaryTheme', next); } catch (e) {}   // not sensitive: theme only
 };
+try {
+  const savedTheme = localStorage.getItem('sanctuaryTheme');
+  if (savedTheme === 'light' || savedTheme === 'dark') document.body.setAttribute('data-theme', savedTheme);
+} catch (e) {}
 
 if (els.btnThemeToggle) els.btnThemeToggle.addEventListener('click', toggleTheme);
 if (els.btnThemeIcon) els.btnThemeIcon.addEventListener('click', toggleTheme);
@@ -247,7 +252,7 @@ if (els.btnNewEntry) {
 // --- LOCK VAULT TOGGLE ---
 const btnLockDiary = document.getElementById('btn-lock-diary');
 if (btnLockDiary) {
-  btnLockDiary.addEventListener('click', () => { window.location.reload(); });
+  btnLockDiary.addEventListener('click', () => { window.lockVault ? window.lockVault() : window.location.reload(); });
 }
 
 // --- WORKSPACE NAVIGATION ---
@@ -284,19 +289,18 @@ els.toolbarBtns.forEach(btn => {
 
 
 // --- QUOTE LIKE BUTTON LOGIC ---
+window.setQuoteLikedUI = (liked) => {
+  if (!els.btnLikeQuote) return;
+  els.btnLikeQuote.classList.toggle('liked', liked);
+  els.btnLikeQuote.style.color = liked ? '#E06C75' : 'var(--text-muted)';
+  els.btnLikeQuote.style.fill = liked ? '#E06C75' : 'none';
+};
 if (els.btnLikeQuote) {
   els.btnLikeQuote.addEventListener('click', () => {
-    els.btnLikeQuote.classList.toggle('liked');
-    if (els.btnLikeQuote.classList.contains('liked')) {
-      els.btnLikeQuote.style.color = '#E06C75';
-      els.btnLikeQuote.style.fill = '#E06C75';
-    } else {
-      els.btnLikeQuote.style.color = 'var(--text-muted)';
-      els.btnLikeQuote.style.fill = 'none';
-    }
-    if (window.currentDailyQuote) {
-      window.currentDailyQuote.liked = els.btnLikeQuote.classList.contains('liked');
-    }
+    const liked = !els.btnLikeQuote.classList.contains('liked');
+    window.setQuoteLikedUI(liked);
+    if (window.currentDailyQuote) window.currentDailyQuote.liked = liked;
+    if (window.archiveDailyQuote) window.archiveDailyQuote();   // old code never saved the like until next unlock (and then reset it)
   });
 }
 
@@ -350,7 +354,8 @@ const initOrbs = () => {
   const animate = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < particlesArray.length; i++) { particlesArray[i].update(); particlesArray[i].draw(); }
-    connect(); requestAnimationFrame(animate);
+    connect();
+    if (!els.authScreen || !els.authScreen.classList.contains('hidden')) requestAnimationFrame(animate);   // stop when auth screen is hidden
   }
   animate();
   window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
@@ -388,13 +393,19 @@ const initSnowAndWind = () => {
     fallenPetals = []; 
   };
   resizeCanvas();
-  window.addEventListener('resize', resizeCanvas);
+  let lastW = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (window.innerWidth !== lastW) { lastW = window.innerWidth; resizeCanvas(); }   // ignore mobile keyboard / URL-bar height changes
+  });
+  const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reducedMotion) return;
+  const PARTICLE_COUNT = window.innerWidth < 768 ? 400 : 1200;   // 1200 stroked lines/frame is brutal on phones
 
   let particles = [];
   let globalWind = 1.5; 
   let targetWind = 1.5;
 
-  for (let i = 0; i < 1200; i++) { 
+  for (let i = 0; i < PARTICLE_COUNT; i++) { 
     const depth = Math.random() * 100 + 1; 
     particles.push({
       x: Math.random() * logicalWidth, 
@@ -576,20 +587,13 @@ const initUI = () => {
     window.currentDailyQuote.liked = false;
   }
 
-  // SESSION STORAGE: If already unlocked, skip the quote screen entirely!
-  if (sessionStorage.getItem('sanctuaryUnlocked') === 'true') {
-    els.quoteScreen.classList.add('hidden');
-    els.mainWorkspace.classList.remove('hidden');
-    els.mainWorkspace.style.opacity = '1';
-    window.dispatchEvent(new Event('resize'));
-  }
+  // SECURITY: the old code skipped straight to the workspace when sessionStorage said 'unlocked',
+  // even though the vault keys/data live only in memory -> after a reload you saw an empty,
+  // non-syncing workspace and 'Lock' did not lock. Unlock state is now never persisted.
 };
 
 if (els.btnEnterSanctuary) {
   els.btnEnterSanctuary.addEventListener('click', () => {
-    // Save the unlock state to the browser's temporary memory
-    sessionStorage.setItem('sanctuaryUnlocked', 'true');
-    
     els.quoteScreen.style.opacity = '0';
     setTimeout(() => {
       els.quoteScreen.classList.add('hidden');
@@ -632,7 +636,7 @@ if (birthdateInput && ageInput) {
 // --- CSS OVERRIDE: FORCE SLEEK DELETE BUTTONS ---
 // This injects the styles dynamically, bypassing the browser's CSS cache
 const styleFix = document.createElement('style');
-styleFix.innerHTML = `
+styleFix.textContent = `
   #lists-container button,
   #thoughts-feed button {
     background: transparent !important;

