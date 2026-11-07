@@ -1,7 +1,7 @@
 // Sidebar / sheet behaviour in headless Chromium.  node tests/ui.cjs <site-dir>
 const http=require("http"),fs=require("fs"),path=require("path");const {chromium}=require("playwright");const assert=require("assert");
 const root=path.resolve(process.argv[2]||".");const MIME={".html":"text/html",".js":"text/javascript",".css":"text/css",".json":"application/json",".png":"image/png"};
-const srv=http.createServer((q,r)=>{let p=path.join(root,q.url.split("?")[0]);if(p.endsWith("/"))p+="index.html";fs.readFile(p,(e,d)=>e?(r.writeHead(404),r.end()):(r.writeHead(200,{"content-type":MIME[path.extname(p)]||"text/plain"}),r.end(d)))});
+const srv=http.createServer((q,r)=>{let reqPath=q.url.split("?")[0];try{reqPath=decodeURIComponent(reqPath)}catch{r.writeHead(400);r.end();return}const rel=reqPath.replace(/^\/+/,"");let p=path.resolve(root,rel);if(!(p===root||p.startsWith(root+path.sep))){r.writeHead(403);r.end();return}if(reqPath.endsWith("/"))p=path.join(p,"index.html");fs.readFile(p,(e,d)=>e?(r.writeHead(404),r.end()):(r.writeHead(200,{"content-type":MIME[path.extname(p)]||"text/plain"}),r.end(d)))});
 let pass=0,fail=0;const ok=(n,c,x="")=>{c?pass++:fail++;console.log((c?"ok   ":"FAIL ")+n+(c?"":"  "+x))};
 async function open(b,w,h,mobile){const ctx=await b.newContext({viewport:{width:w,height:h},isMobile:!!mobile,hasTouch:!!mobile,serviceWorkers:"block"});
   await ctx.route("https://accounts.google.com/gsi/client",r=>r.fulfill({contentType:"text/javascript",body:"window.google={accounts:{oauth2:{initTokenClient:()=>({requestAccessToken(){}})}}};"}));
