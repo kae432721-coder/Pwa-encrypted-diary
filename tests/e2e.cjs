@@ -24,6 +24,7 @@ const ok = (n, c, extra = "") => { c ? pass++ : fail++; console.log((c ? "ok   "
   page.on("pageerror", (e) => errors.push(e.message));
   page.on("console", (m) => { const t = m.text(); if (/Content Security Policy/i.test(t)) csp.push(t); else if (m.type() === "error" && !/Sync error|status of 401/.test(t)) errors.push(t); });
   await ctx.route("https://accounts.google.com/gsi/client", (r) => r.fulfill({ contentType: "text/javascript", body: GSI }));
+  await ctx.route("https://fonts.googleapis.com/**", (r) => r.fulfill({ status: 200, contentType: "text/css", body: "" }));
   await ctx.route("https://www.googleapis.com/**", async (r) => {
     const req = r.request(), u = new URL(req.url()), j = (o, s = 200) => r.fulfill({ status: s, contentType: "application/json", body: JSON.stringify(o) });
     if (drive.expireNext && !/userinfo/.test(u.pathname)) { drive.expireNext = false; return r.fulfill({ status: 401, body: "{}" }); }

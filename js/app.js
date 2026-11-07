@@ -222,32 +222,7 @@ try {
 if (els.btnThemeToggle) els.btnThemeToggle.addEventListener('click', toggleTheme);
 if (els.btnThemeIcon) els.btnThemeIcon.addEventListener('click', toggleTheme);
 
-// --- FULL WORKSPACE DOUBLE-SLIDE CONTROLS ---
-if (els.btnToggleSidebar) {
-  els.btnToggleSidebar.addEventListener('click', () => {
-    const isExpanded = els.sidebar.classList.contains('sidebar-expanded');
-    const journalPanel = document.getElementById('journal-history-panel'); 
-
-    if (isExpanded) {
-      els.sidebar.classList.remove('sidebar-expanded');
-      els.sidebar.classList.add('sidebar-collapsed');
-      if(journalPanel) journalPanel.classList.add('collapsed');
-    } else {
-      els.sidebar.classList.remove('sidebar-collapsed');
-      els.sidebar.classList.add('sidebar-expanded');
-      if(journalPanel) journalPanel.classList.remove('collapsed');
-    }
-  });
-}
-
-if (els.btnNewEntry) {
-  els.btnNewEntry.addEventListener('click', () => {
-    const journalPanel = document.getElementById('journal-history-panel');
-    els.sidebar.classList.remove('sidebar-expanded');
-    els.sidebar.classList.add('sidebar-collapsed');
-    if(journalPanel) journalPanel.classList.add('collapsed');
-  });
-}
+// Sidebar / drawer / pages-panel behaviour lives in js/ui.js
 
 // --- LOCK VAULT TOGGLE ---
 const btnLockDiary = document.getElementById('btn-lock-diary');

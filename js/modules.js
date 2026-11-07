@@ -73,8 +73,7 @@ const renderJournalHistory = () => {
       setBody(entry.content);
       document.getElementById("btn-delete-entry").classList.remove("hidden");
       renderJournalHistory();
-      const sidebar = document.getElementById("sidebar");
-      if (sidebar) { sidebar.classList.remove("sidebar-expanded"); sidebar.classList.add("sidebar-collapsed"); }
+      window.dispatchEvent(new Event("journalEntryChosen"));   // ui.js closes the pages sheet on phones
     });
     listEl.appendChild(li);
   }

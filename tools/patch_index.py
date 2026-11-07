@@ -26,9 +26,15 @@ if "Content-Security-Policy" not in s:
 else:
     print("skipped  CSP (already present)")
 
-sub("viewport: allow pinch-zoom (accessibility)",
-    r'<meta name="viewport" content="[^"]*(?:maximum-scale|user-scalable)[^"]*">',
-    '<meta name="viewport" content="width=device-width, initial-scale=1.0">')
+sub("viewport: allow pinch-zoom + draw under phone notches",
+    r'<meta name="viewport" content="(?![^"]*viewport-fit)[^"]*">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">')
+sub("link ui.css after styles.css",
+    r'(<link rel="stylesheet" href="styles\.css">)(?![\s\S]*ui\.css)',
+    r'\1\n<link rel="stylesheet" href="ui.css">')
+sub("load js/ui.js after app.js",
+    r'(<script src="js/app\.js"></script>)(?![\s\S]*js/ui\.js)',
+    r'\1\n<script src="js/ui.js"></script>')
 sub("apple-touch-icon: use local icon instead of hot-linked flaticon",
     r'<link rel="apple-touch-icon" href="https?://[^"]*">',
     '<link rel="apple-touch-icon" href="icons/icon-192.png">\n<link rel="icon" type="image/png" href="icons/icon-192.png">')

@@ -47,6 +47,16 @@ Vaults written by older versions (`ENC:`, 100,000 iterations) still open and are
 
 An earlier README described this as Vigenère. That was never true; the app has used AES-GCM from the start.
 
+## Interface
+
+On desktop the sidebar is a persistent rail that collapses to icons and remembers its state. On phones it becomes a
+drawer that slides over the page (menu button, swipe from the left edge, or Escape to close), and the journal's page
+list becomes a bottom sheet. The two panels are independent.
+
+The background follows the real time of day (dawn, daylight, golden hour, dusk, night) in both themes, with a soft
+vignette, film grain, slow mist and drifting light motes layered over the snow and petals. Motion is turned off for
+people who prefer reduced motion.
+
 ## Design decisions
 
 **Rendering.** User content is only ever inserted as text. The journal body is the one place that holds markup, and
@@ -91,14 +101,16 @@ A client ID is public by design; the origin list is what protects it.
 
 ```
 index.html        interface and CSP
-styles.css
+styles.css        base styles and theme variables
+ui.css            interface layer: sidebar rail/drawer, atmosphere, cards, sheets, mobile
 sw.js             network-first offline cache, same-origin only
 manifest.json
 icons/
 js/
   cloud.js        crypto, Drive sync, sign-in, locking
   modules.js      journal, codex, lists, thoughts
-  app.js          interface, daily quote, themes, animation
+  app.js          daily quote, themes, snow and petals
+  ui.js           sidebar (rail on desktop, drawer on phones), pages sheet, time-of-day background, sync status
 tests/            unit and browser tests
 poc/              exploit demos against the old version
 tools/            patch helpers
@@ -109,6 +121,7 @@ tools/            patch helpers
 ```bash
 node tests/crypto.test.mjs                 # no dependencies, Node 18+
 npm i playwright && node tests/e2e.cjs .   # headless browser with mocked Google and Drive
+node tests/ui.cjs .                        # sidebar, drawer, bottom sheet and swipe behaviour
 ```
 
 The unit tests cover round trips, a 3 MB vault, wrong passwords, bit-flips in the ciphertext and the header, the
