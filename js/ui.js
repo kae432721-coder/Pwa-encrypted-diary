@@ -5,6 +5,7 @@
   const $ = (s, r = document) => r.querySelector(s);
   const NS = 'http://www.w3.org/2000/svg';
   const mqMobile = window.matchMedia('(max-width: 899.98px)');
+  const mqDocked = window.matchMedia('(min-width: 1400px)');   // wide screens keep the pages list docked; others use a flyout
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const store = {
     get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -26,6 +27,7 @@
     'view-thoughts': ['M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z'],
     'view-settings': ['M4 21v-7', 'M4 10V3', 'M12 21v-9', 'M12 8V3', 'M20 21v-5', 'M20 12V3', 'M1 14h6', 'M9 8h6', 'M17 16h6']
   };
+  const PLUS_ICON = ['M12 5v14', 'M5 12h14'];
   const PAGES_ICON = ['M8 6h13', 'M8 12h13', 'M8 18h13', 'M3 6h.01', 'M3 12h.01', 'M3 18h.01'];
   const MOON = ['M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z'];
 
@@ -141,22 +143,24 @@
 
   const pagesPanel = $('#journal-history-panel');
   const isNavOpen = () => document.body.classList.contains('nav-open');
-  const isSheetOpen = () => document.body.classList.contains('sheet-open');
+  const isPagesOpen = () => !!pagesPanel && pagesPanel.classList.contains('open');
+  const floating = () => mqMobile.matches || !mqDocked.matches;      // sheet (phone) or flyout (mid-width)
 
   function syncInert() {
     sidebar.inert = mqMobile.matches && !isNavOpen();
-    if (pagesPanel) pagesPanel.inert = mqMobile.matches && !isSheetOpen();
+    if (pagesPanel) pagesPanel.inert = floating() && !isPagesOpen();
   }
   function setNavOpen(open) {
     document.body.classList.toggle('nav-open', open);
-    if (open) setSheetOpen(false);
+    if (open) setPagesOpen(false);
     toggleBtn.setAttribute('aria-expanded', String(open));
     syncInert();
   }
-  function setSheetOpen(open) {
+  function setPagesOpen(open) {
     if (!pagesPanel) return;
-    document.body.classList.toggle('sheet-open', open);
     pagesPanel.classList.toggle('open', open);
+    document.body.classList.toggle('sheet-open', open && mqMobile.matches);   // scrim is phone-only
+    const pb = $('#btn-toggle-pages'); if (pb) pb.setAttribute('aria-expanded', String(open));
     syncInert();
   }
   function setRail(collapsed) {
@@ -171,8 +175,14 @@
     if (mqMobile.matches) setNavOpen(!isNavOpen());
     else setRail(!sidebar.classList.contains('sidebar-collapsed'));
   });
-  scrim.addEventListener('click', () => { setNavOpen(false); setSheetOpen(false); });
-  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setNavOpen(false); setSheetOpen(false); } });
+  scrim.addEventListener('click', () => { setNavOpen(false); setPagesOpen(false); });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') { setNavOpen(false); setPagesOpen(false); } });
+  // flyout (mid-width): click anywhere else to dismiss
+  document.addEventListener('pointerdown', (e) => {
+    if (!isPagesOpen() || mqMobile.matches || mqDocked.matches) return;
+    if (e.target.closest('#journal-history-panel') || e.target.closest('#btn-toggle-pages')) return;
+    setPagesOpen(false);
+  });
 
   // swipe: from the left edge to open, left anywhere to close
   let sx = 0, sy = 0, tracking = false;
@@ -192,17 +202,16 @@
 
   const applyMode = () => {
     document.body.classList.remove('nav-open', 'sheet-open');
-    if (pagesPanel) pagesPanel.classList.remove('open');
+    if (pagesPanel) { pagesPanel.classList.remove('open'); pagesPanel.classList.toggle('collapsed', !floating() && store.get('sanctuaryPages') === '0'); }
     if (mqMobile.matches) {
       sidebar.classList.remove('sidebar-collapsed'); sidebar.classList.add('sidebar-expanded');
       toggleBtn.setAttribute('aria-expanded', 'false');
     } else {
       setRail(store.get('sanctuaryRail') === '1');
-      if (pagesPanel) pagesPanel.classList.toggle('collapsed', store.get('sanctuaryPages') === '0');
     }
     syncInert();
   };
-  (mqMobile.addEventListener ? mqMobile.addEventListener.bind(mqMobile, 'change') : mqMobile.addListener.bind(mqMobile))(applyMode);
+  for (const mq of [mqMobile, mqDocked]) (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(applyMode);
 
   // ======================================================================
   // 3. JOURNAL PAGES PANEL: its own toggle (decoupled from the nav)
@@ -214,17 +223,21 @@
     pb.title = 'Show or hide your pages';
     pb.append(svg(PAGES_ICON), document.createTextNode('Pages'));
     const div = document.createElement('div'); div.className = 'toolbar-divider';
-    toolbar.prepend(pb, div);
+    const qn = document.createElement('button');            // one-tap new page when the list is a flyout / sheet
+    qn.type = 'button'; qn.id = 'btn-quick-new'; qn.className = 'toolbar-btn'; qn.title = 'New page';
+    qn.append(svg(PLUS_ICON), document.createTextNode('New'));
+    qn.addEventListener('click', () => { const b = $('#btn-new-entry'); if (b) b.click(); });
+    toolbar.prepend(pb, qn, div);
     pb.addEventListener('click', () => {
-      if (mqMobile.matches) { setSheetOpen(!isSheetOpen()); return; }
-      const hide = !pagesPanel.classList.contains('collapsed');
+      if (floating()) { setPagesOpen(!isPagesOpen()); return; }          // phone sheet or mid-width flyout
+      const hide = !pagesPanel.classList.contains('collapsed');      // wide screens: dock / undock
       pagesPanel.classList.toggle('collapsed', hide);
       store.set('sanctuaryPages', hide ? '0' : '1');
     });
   }
-  window.addEventListener('journalEntryChosen', () => { if (mqMobile.matches) setSheetOpen(false); });
+  window.addEventListener('journalEntryChosen', () => { if (floating()) setPagesOpen(false); });
   const newBtn = $('#btn-new-entry');
-  if (newBtn) newBtn.addEventListener('click', () => { if (mqMobile.matches) setSheetOpen(false); });
+  if (newBtn) newBtn.addEventListener('click', () => { if (floating()) setPagesOpen(false); });
 
   // ======================================================================
   // 4. SYNC STATUS: sidebar footer + editor toolbar mirror the cloud indicator

@@ -57,7 +57,7 @@ const ok = (n, c, extra = "") => { c ? pass++ : fail++; console.log((c ? "ok   "
 
   // 2. journal body (contenteditable) is saved + survives lock/unlock
   await page.click("#btn-enter-sanctuary"); await page.waitForSelector("#main-workspace:not(.hidden)");
-  await page.click("#btn-new-entry"); await page.fill("#entry-title", "Day one");
+  await page.click("#btn-quick-new"); await page.fill("#entry-title", "Day one");
   await page.click("#entry-body"); await page.keyboard.type("dear diary, secret text");
   await page.waitForTimeout(2200);
   ok("vault on Drive does not contain plaintext", !drive.file.includes("secret text") && !drive.file.includes("Day one"));

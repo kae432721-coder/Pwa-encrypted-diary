@@ -50,8 +50,9 @@ An earlier README described this as Vigenère. That was never true; the app has 
 ## Interface
 
 On desktop the sidebar is a persistent rail that collapses to icons and remembers its state. On phones it becomes a
-drawer that slides over the page (menu button, swipe from the left edge, or Escape to close), and the journal's page
-list becomes a bottom sheet. The two panels are independent.
+drawer that slides over the page (menu button, swipe from the left edge, or Escape to close). The journal's page list
+adapts to the screen: docked beside the editor on wide screens (1400px and up), a flyout over the editor on tablets and
+small laptops, and a bottom sheet on phones. The two panels are independent.
 
 The background follows the real time of day (dawn, daylight, golden hour, dusk, night) in both themes, with a soft
 vignette, film grain, slow mist and drifting light motes layered over the snow and petals. Motion is turned off for
