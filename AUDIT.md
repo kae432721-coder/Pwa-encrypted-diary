@@ -28,6 +28,13 @@ Every item marked ✔ was reproduced against the old code and verified fixed (`t
 * **Performance** — 1 200 stroked particles/frame (now 400 on phones, off for *reduced motion*), the orbs loop kept running forever behind the app, and the snow canvas reset on every keyboard open.
 * Canvas re-encoding already stripped EXIF/GPS from portraits (👍) — kept; PNG transparency now becomes white rather than black.
 
+## Found later by GitHub code scanning (CodeQL)
+* **`js/path-injection` (High) x3** in `tests/ui.cjs`, `tests/e2e.cjs`, `poc/poc_xss_key_theft.cjs`: the throw-away web servers used by the
+  tests turned the request URL into a file path, so `GET /../x` could read files outside the folder, and they listened on all interfaces.
+  Not part of the shipped app, but real. Fixed once in `tests/static-server.cjs`: the folder is indexed at start-up and a request can only
+  look a key up in that index (it is never used to build a path); dotfiles and symlinks are not served; binds to `127.0.0.1` only.
+  Regression test: `tests/static-server.test.cjs` (11 traversal variants).
+
 ## Honest remaining limitations
 * Rollback of an older valid file is not detectable without server-side state.
 * A script that runs in the page (e.g. a malicious browser extension) can still call the app's own functions while unlocked.

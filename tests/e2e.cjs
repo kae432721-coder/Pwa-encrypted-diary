@@ -1,21 +1,18 @@
 // End-to-end test in headless Chromium with a mocked Google + Drive.
 // Usage: node tests/e2e.cjs <site_dir>      (needs: npm i playwright)
-const http = require("http"), fs = require("fs"), path = require("path");
+const path = require("path");
+const { createStaticServer, listen } = require("./static-server.cjs");
 const { chromium } = require("playwright");
 const assert = require("assert");
 const root = path.resolve(process.argv[2] || ".");
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png" };
-const srv = http.createServer((q, r) => {
-  let p = path.join(root, decodeURIComponent(q.url.split("?")[0])); if (p.endsWith("/")) p += "index.html";
-  fs.readFile(p, (e, d) => e ? (r.writeHead(404), r.end()) : (r.writeHead(200, { "content-type": MIME[path.extname(p)] || "text/plain" }), r.end(d)));
-});
+const srv = createStaticServer(root);
 const GSI = `window.google={accounts:{oauth2:{initTokenClient:(c)=>({requestAccessToken:()=>setTimeout(()=>c.callback({access_token:window.__tok||'tok1'}),10)})}}};`;
 const drive = { file: null, version: 1, expireNext: false };   // mocked Drive
 let pass = 0, fail = 0;
 const ok = (n, c, extra = "") => { c ? pass++ : fail++; console.log((c ? "ok   " : "FAIL ") + n + (c ? "" : "  " + extra)); };
 
 (async () => {
-  await new Promise((r) => srv.listen(8123, r));
+  await listen(srv, 8123);
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ serviceWorkers: "block" });
   const page = await ctx.newPage();

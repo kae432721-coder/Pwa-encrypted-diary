@@ -3,14 +3,13 @@
 //     node poc/poc_xss_key_theft.cjs <dir containing index.html>
 // OLD code  -> prints "VULNERABLE" and the stolen master password.
 // FIXED code -> prints "SAFE".
-const http = require("http"), fs = require("fs"), path = require("path");
+const path = require("path");
+const { createStaticServer, listen } = require("../tests/static-server.cjs");
 const { chromium } = require("playwright");
 const root = path.resolve(process.argv[2] || ".");
-const MIME = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".png": "image/png" };
-const srv = http.createServer((q, r) => { let p = path.join(root, q.url.split("?")[0]); if (p.endsWith("/")) p += "index.html";
-  fs.readFile(p, (e, d) => e ? (r.writeHead(404), r.end()) : (r.writeHead(200, { "content-type": MIME[path.extname(p)] || "text/plain" }), r.end(d))); });
+const srv = createStaticServer(root);
 (async () => {
-  await new Promise((r) => srv.listen(8124, r));
+  await listen(srv, 8124);
   const b = await chromium.launch(), ctx = await b.newContext({ serviceWorkers: "block" }), page = await ctx.newPage();
   await ctx.route("https://accounts.google.com/gsi/client", (r) => r.fulfill({ contentType: "text/javascript", body: "window.google={accounts:{oauth2:{initTokenClient:()=>({requestAccessToken(){}})}}};" }));
   await ctx.route("https://www.googleapis.com/**", (r) => r.fulfill({ status: 200, body: "{}" }));

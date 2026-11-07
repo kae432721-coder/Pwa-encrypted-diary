@@ -1,7 +1,8 @@
 // Sidebar / sheet behaviour in headless Chromium.  node tests/ui.cjs <site-dir>
-const http=require("http"),fs=require("fs"),path=require("path");const {chromium}=require("playwright");const assert=require("assert");
-const root=path.resolve(process.argv[2]||".");const MIME={".html":"text/html",".js":"text/javascript",".css":"text/css",".json":"application/json",".png":"image/png"};
-const srv=http.createServer((q,r)=>{let p=path.join(root,q.url.split("?")[0]);if(p.endsWith("/"))p+="index.html";fs.readFile(p,(e,d)=>e?(r.writeHead(404),r.end()):(r.writeHead(200,{"content-type":MIME[path.extname(p)]||"text/plain"}),r.end(d)))});
+const path=require("path");const {chromium}=require("playwright");const assert=require("assert");
+const {createStaticServer,listen}=require("./static-server.cjs");
+const root=path.resolve(process.argv[2]||".");
+const srv=createStaticServer(root);
 let pass=0,fail=0;const ok=(n,c,x="")=>{c?pass++:fail++;console.log((c?"ok   ":"FAIL ")+n+(c?"":"  "+x))};
 async function open(b,w,h,mobile){const ctx=await b.newContext({viewport:{width:w,height:h},isMobile:!!mobile,hasTouch:!!mobile,serviceWorkers:"block"});
   await ctx.route("https://accounts.google.com/gsi/client",r=>r.fulfill({contentType:"text/javascript",body:"window.google={accounts:{oauth2:{initTokenClient:()=>({requestAccessToken(){}})}}};"}));
@@ -12,7 +13,7 @@ async function open(b,w,h,mobile){const ctx=await b.newContext({viewport:{width:
     sanctuaryData.journal.push({id:'J1',title:'T',content:'c',timestamp:new Date().toISOString()});window.dispatchEvent(new Event('cloudDataLoaded'));});
   await p.waitForTimeout(300);return {ctx,p};}
 const box=(p,s)=>p.evaluate(s=>{const r=document.querySelector(s).getBoundingClientRect();return {x:r.x,w:r.width,r:r.right}},s);
-(async()=>{await new Promise(r=>srv.listen(8128,r));const b=await chromium.launch();
+(async()=>{await listen(srv,8128);const b=await chromium.launch();
   // ---------- desktop ----------
   let {ctx,p}=await open(b,1280,800,false);
   let w1=(await box(p,'#sidebar')).w; ok("desktop: sidebar expanded by default (~272px)",Math.abs(w1-272)<2,w1);
