@@ -59,7 +59,7 @@
   const near = document.createElement('div'); near.className = 'atm-layer atm-near';
   for (const c of ['a', 'b']) { const m = document.createElement('i'); m.className = 'mist ' + c; far.append(m); }
   if (!reduced) {
-    const count = mqMobile.matches ? 9 : 16;
+    const count = mqMobile.matches ? 7 : 12;
     for (let i = 0; i < count; i++) {
       const m = document.createElement('i');
       m.className = 'mote';
@@ -76,7 +76,8 @@
       near.append(m);
     }
   }
-  atmosphere.append(far, near);
+  const lamp = document.createElement('i'); lamp.className = 'lamp';        // static amber glow, night only (see ambience.js)
+  atmosphere.append(lamp, far, near);
   document.body.prepend(atmosphere);
 
   let themeMeta = document.querySelector('meta[name="theme-color"]');

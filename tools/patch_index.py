@@ -35,6 +35,9 @@ sub("link ui.css after styles.css",
 sub("load js/ui.js after app.js",
     r'(<script src="js/app\.js"></script>)(?![\s\S]*js/ui\.js)',
     r'\1\n<script src="js/ui.js"></script>')
+sub("load js/ambience.js after ui.js",
+    r'(<script src="js/ui\.js"></script>)(?![\s\S]*js/ambience\.js)',
+    r'\1\n<script src="js/ambience.js"></script>')
 sub("apple-touch-icon: use local icon instead of hot-linked flaticon",
     r'<link rel="apple-touch-icon" href="https?://[^"]*">',
     '<link rel="apple-touch-icon" href="icons/icon-192.png">\n<link rel="icon" type="image/png" href="icons/icon-192.png">')

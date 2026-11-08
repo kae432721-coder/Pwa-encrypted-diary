@@ -55,8 +55,14 @@ adapts to the screen: docked beside the editor on wide screens (1400px and up), 
 small laptops, and a bottom sheet on phones. The two panels are independent.
 
 The background follows the real time of day (dawn, daylight, golden hour, dusk, night) in both themes, with a soft
-vignette, film grain, slow mist and drifting light motes layered over the snow and petals. Motion is turned off for
-people who prefer reduced motion.
+vignette, film grain, slow mist and drifting light motes. Over it, snow falls at night (lit by a street lamp) and
+sakura petals fall by day and settle in a pile at the bottom. They respond to you: move the mouse or a finger to stir
+the air, tap the background to release a few, press and hold to slow time around your finger. While you type, the
+weather calms down so it never competes with your writing, and on Android, tilting the phone steers the wind.
+
+Settings has an Ambience control (Still, Calm, Lively). Still draws one frame and stops everything, which is the
+battery-saver option, and it is the default for people who prefer reduced motion. The engine pauses when the tab is
+hidden or the sign-in screen covers it, and sheds particles by itself if the device cannot keep up.
 
 ## Design decisions
 
@@ -110,7 +116,8 @@ icons/
 js/
   cloud.js        crypto, Drive sync, sign-in, locking
   modules.js      journal, codex, lists, thoughts
-  app.js          daily quote, themes, snow and petals
+  app.js          daily quote, themes, orbs on the sign-in screen
+  ambience.js     snow and petals you can touch (levels, adaptive, pauses when hidden)
   ui.js           sidebar (rail on desktop, drawer on phones), pages sheet, time-of-day background, sync status
 tests/            unit and browser tests
 poc/              exploit demos against the old version
@@ -123,6 +130,7 @@ tools/            patch helpers
 node tests/crypto.test.mjs                 # no dependencies, Node 18+
 npm i playwright && node tests/e2e.cjs .   # headless browser with mocked Google and Drive
 node tests/ui.cjs .                        # sidebar, drawer, bottom sheet and swipe behaviour
+node tests/ambience.cjs .                  # snow/petal engine: touch, tap, hold, typing calm, levels, reduced motion
 node tests/static-server.test.cjs          # the test web server cannot be tricked into reading outside its folder
 ```
 
