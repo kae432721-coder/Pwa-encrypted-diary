@@ -76,8 +76,8 @@
       near.append(m);
     }
   }
-  const lamp = document.createElement('i'); lamp.className = 'lamp';        // static amber glow, night only (see ambience.js)
-  atmosphere.append(lamp, far, near);
+  const moonGlow = document.createElement('i'); moonGlow.className = 'moon-glow';   // the moon's halo, night only (ambience.js drives its opacity)
+  atmosphere.append(moonGlow, far, near);
   document.body.prepend(atmosphere);
 
   let themeMeta = document.querySelector('meta[name="theme-color"]');

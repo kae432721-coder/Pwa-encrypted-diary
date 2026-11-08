@@ -55,10 +55,21 @@ adapts to the screen: docked beside the editor on wide screens (1400px and up), 
 small laptops, and a bottom sheet on phones. The two panels are independent.
 
 The background follows the real time of day (dawn, daylight, golden hour, dusk, night) in both themes, with a soft
-vignette, film grain, slow mist and drifting light motes. Over it, snow falls at night (lit by a street lamp) and
-sakura petals fall by day and settle in a pile at the bottom. They respond to you: move the mouse or a finger to stir
-the air, tap the background to release a few, press and hold to slow time around your finger. While you type, the
-weather calms down so it never competes with your writing, and on Android, tilting the phone steers the wind.
+vignette, film grain, slow mist and drifting light motes.
+
+By day, sakura petals fall and settle into a pile on the ground. At night there is a moon (a procedurally drawn
+waxing gibbous with maria, craters and a faint halo ring, placed 35% across and 15% down), cloud veils that drift
+across it, and snow that glitters as it passes through the moonlight. The snow settles into drifts along the bottom.
+
+The scene responds to you and keeps the state you leave it in:
+
+- Move the mouse or a finger and the air swirls around it; snow and petals are dragged along and curl past.
+- Drag through the petals lying on the ground and they scatter, flutter, and settle again.
+- Drag along the night's snowy ground and you plough a furrow and throw snow into the air; it heals after about 15 s.
+- Tap the background and a ripple travels outward through the air, pushing whatever it crosses. Tap the moon and it glows.
+- Press and hold to slow time in a bubble around your finger (ground petals float up inside it).
+- While you type, the weather calms down so it never competes with your writing.
+- On Android, tilting the phone steers the wind.
 
 Settings has an Ambience control (Still, Calm, Lively). Still draws one frame and stops everything, which is the
 battery-saver option, and it is the default for people who prefer reduced motion. The engine pauses when the tab is
@@ -130,7 +141,7 @@ tools/            patch helpers
 node tests/crypto.test.mjs                 # no dependencies, Node 18+
 npm i playwright && node tests/e2e.cjs .   # headless browser with mocked Google and Drive
 node tests/ui.cjs .                        # sidebar, drawer, bottom sheet and swipe behaviour
-node tests/ambience.cjs .                  # snow/petal engine: touch, tap, hold, typing calm, levels, reduced motion
+node tests/ambience.cjs .                  # moon, snow, petals: touch, ground, ripples, hold, typing calm, levels, reduced motion
 node tests/static-server.test.cjs          # the test web server cannot be tricked into reading outside its folder
 ```
 

@@ -61,6 +61,54 @@ const S = (p) => p.evaluate(() => Ambience.stats());
   s = await S(p);
   ok("releasing a hold ends it without a bloom", s.holding === false && s.bursts === b1);
 
+  // ---- petals lying on the ground (day): they persist, scatter when you drag through them, and settle again
+  await p.mouse.move(20, 20);
+  await p.evaluate(() => Ambience.simulate(90));
+  let st = await S(p);
+  ok("petals land and stay as a pile on the ground", st.pile >= 15, `pile ${st.pile}`);
+  ok("the pile is capped (never buries the sky)", st.pile <= Math.round(st.count * 0.38) + 1, `pile ${st.pile} of ${st.count}`);
+  const pile0 = st.pile;
+  for (let k = 0; k < 3; k++) for (let i = 0; i < 40; i++) { await p.mouse.move(500 + i * 24, 860); await p.waitForTimeout(10); }
+  const pile1 = (await S(p)).pile;
+  ok("dragging through the pile scatters the petals", pile1 <= pile0 - 5, `${pile0} -> ${pile1}`);
+  await p.mouse.move(20, 20); await p.waitForTimeout(400);
+  await p.evaluate(() => Ambience.simulate(40));
+  ok("scattered petals settle again", (await S(p)).pile > pile1, `${pile1} -> ${(await S(p)).pile}`);
+
+  // ---- the night: moon, moonlit snow, ploughable ground, ripples
+  await p.click("#btn-theme-toggle-icon"); await p.waitForTimeout(500);
+  await p.mouse.move(20, 20);
+  st = await S(p);
+  ok("night shows snow", st.kind === "snow");
+  ok("the moon sits where the old light was (35% across, 15% down)", Math.abs(st.moon.x - 1600 * 0.35) < 2 && Math.abs(st.moon.y - 900 * 0.15) < 2, JSON.stringify(st.moon));
+  await p.waitForTimeout(1500);
+  const px = await p.evaluate(() => { const c = document.getElementById("snow-canvas"), s = Ambience.stats().moon, d = c.getContext("2d").getImageData(Math.round(s.x * c.width / innerWidth) + 6, Math.round(s.y * c.height / innerHeight), 1, 1).data; return { a: d[3], lum: (d[0] + d[1] + d[2]) / 3 }; });
+  ok("the moon is actually drawn (bright, opaque disc)", px.a > 200 && px.lum > 150, JSON.stringify(px));
+  ok("moon halo is visible at night and hidden by day", await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".moon-glow")).opacity)) > 0.3);
+  // tapping the moon makes it glow (on the Codex screen, where nothing covers it)
+  await p.evaluate(() => document.querySelector('.nav-item[data-target="view-people"]').click()); await p.waitForTimeout(400);
+  await p.mouse.click(Math.round(st.moon.x), Math.round(st.moon.y)); await p.waitForTimeout(250);
+  ok("touching the moon makes it pulse", (await S(p)).moon.pulse > 0.3, String((await S(p)).moon.pulse));
+  await p.evaluate(() => document.querySelector('.nav-item[data-target="view-journal"]').click()); await p.waitForTimeout(300);
+  // tap ripple travels through the air
+  await p.mouse.click(1570, 520); await p.waitForTimeout(150);
+  ok("a tap sends a ripple through the air", (await S(p)).ripples >= 1);
+  await p.waitForTimeout(1300);
+  ok("…which fades away", (await S(p)).ripples === 0, String((await S(p)).ripples));
+  // plough the snowy ground
+  await p.mouse.move(20, 20); await p.waitForTimeout(300);
+  const g0 = await p.evaluate(() => Ambience.groundRange(500, 900));
+  ok("the ground has snow drifts (> 12px)", g0 > 12, g0.toFixed(1));
+  let gmin = g0;
+  for (let k = 0; k < 2; k++) for (let i = 0; i < 30; i++) { await p.mouse.move(500 + i * 14, 862); await p.waitForTimeout(10); gmin = Math.min(gmin, await p.evaluate(() => Ambience.groundRange(500, 900))); }
+  ok("dragging along the ground ploughs a furrow", gmin < g0 - 3, `${g0.toFixed(1)} -> ${gmin.toFixed(1)}`);
+  await p.mouse.move(20, 20); await p.waitForTimeout(400);
+  await p.evaluate(() => Ambience.simulate(60));
+  const g2 = await p.evaluate(() => Ambience.groundRange(500, 900));
+  ok("…and the furrow heals", g2 > gmin + 2, `${gmin.toFixed(1)} -> ${g2.toFixed(1)}`);
+  await p.click("#btn-theme-toggle-icon"); await p.waitForTimeout(1400);
+  ok("by day the moon halo is hidden", await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".moon-glow")).opacity)) < 0.05);
+
   // ---- typing calms the weather, then it returns
   await p.click("#entry-title"); await p.keyboard.type("quiet", { delay: 40 }); await p.waitForTimeout(900);
   const f1 = (await S(p)).focus;
@@ -91,6 +139,12 @@ const S = (p) => p.evaluate(() => Ambience.stats());
   await p.waitForTimeout(500);
   s = await S(p);
   ok("prefers-reduced-motion starts in Still", s.level === "still" && !s.running);
+  await ctx.close();
+
+  // ---- Still mode at night still shows the whole moon (disc + halo)
+  ({ ctx, p } = await page(b, { theme: "dark", level: "still" }));
+  await p.waitForTimeout(900);
+  ok("Still + night: the moon's halo is visible too", await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".moon-glow")).opacity)) > 0.3);
   await ctx.close();
 
   // ---- idle while the sign-in screen covers the canvas
