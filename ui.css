@@ -24,13 +24,13 @@
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 0.045'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 [data-theme="dark"] {
-  --accent: #e3bd7c;                      /* candle-light amber: a warm counterpoint to the cool moonlight */
+  --accent: #e3bd7c;                      /* golden amber: the yellow-and-black night */
   --accent-soft: rgba(227, 189, 124, 0.12);
   --ok: #7fc08a; --warn: #e3b25c;
   --vignette: rgba(0, 0, 0, 0.42);
-  --mist-a: rgba(120, 110, 175, 0.16);
-  --mist-b: rgba(120, 150, 232, 0.09);
-  --mote: rgba(190, 212, 255, 0.55);
+  --mist-a: rgba(170, 125, 55, 0.11);
+  --mist-b: rgba(225, 170, 110, 0.08);
+  --mote: rgba(255, 196, 120, 0.6);
   --grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='matrix' values='.33 .33 .33 0 0 .33 .33 .33 0 0 .33 .33 .33 0 0 0 0 0 0 0.06'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
 }
 
@@ -80,10 +80,10 @@ body {
 
 .moon-glow { position: absolute; left: 35%; top: 15%; width: min(1600px, 120vmax); height: min(1600px, 120vmax);
   transform: translate(-50%, -50%); border-radius: 50%; pointer-events: none; opacity: 0; transition: opacity 0.9s ease;
-  background: radial-gradient(closest-side, rgba(214, 226, 255, 0.24) 0%, rgba(170, 193, 255, 0.10) 14%, rgba(120, 150, 232, 0.04) 42%, rgba(120, 150, 232, 0) 100%); }
+  background: radial-gradient(closest-side, rgba(255, 205, 110, 0.27) 0%, rgba(255, 190, 90, 0.12) 14%, rgba(255, 170, 70, 0.045) 42%, rgba(255, 170, 70, 0) 100%); }
 .moon-glow::before {                                    /* the faint ring seen around a real moon (the "22 degree halo") */
   content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(closest-side, transparent 0 23%, rgba(200, 216, 255, 0.07) 26%, rgba(200, 216, 255, 0.035) 30%, transparent 35%); }
+  background: radial-gradient(closest-side, transparent 0 23%, rgba(255, 222, 150, 0.075) 26%, rgba(255, 222, 150, 0.035) 30%, transparent 35%); }
 .mist { position: absolute; width: 70vmax; height: 70vmax; border-radius: 50%; will-change: transform; }
 .mist.a { left: -25vmax; top: -35vmax; background: radial-gradient(closest-side, var(--mist-a), transparent); animation: driftA 95s ease-in-out infinite alternate; }
 .mist.b { right: -30vmax; bottom: -40vmax; background: radial-gradient(closest-side, var(--mist-b), transparent); animation: driftB 120s ease-in-out infinite alternate; }
@@ -203,6 +203,10 @@ body {
 .journal-textarea[contenteditable] h2 { font-size: 1.6em; }
 
 [data-theme="dark"] .editor-toolbar { background: color-mix(in srgb, var(--bg-surface) 52%, transparent); }   /* let the moon glow through */
+
+/* the moon can sit behind a heading: a soft dark halo keeps text legible over it */
+[data-theme="dark"] .section-title, [data-theme="dark"] .title-input, [data-theme="dark"] .journal-textarea[contenteditable],
+[data-theme="dark"] .date-display { text-shadow: 0 0 16px rgba(6, 4, 2, 0.75), 0 1px 3px rgba(6, 4, 2, 0.6); }
 
 /* --- Cards ------------------------------------------------------------------ */
 .card { border-radius: 14px; padding: 26px;

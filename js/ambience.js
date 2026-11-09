@@ -1,13 +1,12 @@
 // --- AMBIENCE: snow at night, sakura petals by day, and they respond to you ---
 //
 //  move / drag   stirs the air: particles are dragged along and swirl around your finger. Dragging through the
-//                petals lying on the ground scatters them (they flutter up and settle again); dragging along the
-//                night's snowy ground ploughs a furrow and kicks snow into the air, which slowly heals
+//                petals lying on the ground scatters them (they flutter up and settle again)
 //  tap           a ripple travels outward through the air, pushing snow / petals as it passes, with a small bloom
 //  press & hold  time slows around your finger; ground petals float up in the bubble; letting go exhales a puff
 //  typing        the weather calms down so it never competes with your writing
 //  phone tilt    steers the wind (Android; iOS needs a permission prompt, so it is skipped)
-//  night         a moon (35% across, 15% down) with halo, drifting cloud veils, and moonlit snow
+//  night         a golden moon (35% across, 15% down) with a warm halo, drifting cloud veils, and snow lit amber near it
 //
 // Levels (Settings -> Ambience): Still (one calm frame, zero CPU), Calm (default), Lively.
 // Cheap by design: pre-rendered sprites (no shadowBlur / per-particle paths), time-based physics (same speed on
@@ -49,9 +48,10 @@
     g.fillStyle = grad; g.fillRect(0, 0, w, w);
   };
   const S = {
-    flakeIcy:  sprite(64, 64, (g, w) => radial(g, w, '225,235,255', [[0, 1], [0.25, 0.85], [0.6, 0.25], [1, 0]])),
-    bokeh:     sprite(96, 96, (g, w) => radial(g, w, '220,232,255', [[0, 0.16], [0.6, 0.20], [0.88, 0.26], [1, 0]])),
-    haloCool:  sprite(128, 128, (g, w) => radial(g, w, '205,220,255', [[0, 1], [0.4, 0.35], [1, 0]])),
+    flakeIcy:  sprite(64, 64, (g, w) => radial(g, w, '236,240,250', [[0, 1], [0.25, 0.85], [0.6, 0.25], [1, 0]])),
+    flakeWarm: sprite(64, 64, (g, w) => radial(g, w, '255,214,130', [[0, 1], [0.25, 0.85], [0.6, 0.25], [1, 0]])),
+    bokeh:     sprite(96, 96, (g, w) => radial(g, w, '255,226,170', [[0, 0.16], [0.6, 0.20], [0.88, 0.26], [1, 0]])),
+    haloWarm:  sprite(128, 128, (g, w) => radial(g, w, '255,205,120', [[0, 1], [0.4, 0.35], [1, 0]])),
     haloSoft:  sprite(128, 128, (g, w) => radial(g, w, '255,236,232', [[0, 1], [0.4, 0.4], [1, 0]])),
     petals: [['#fde6ec', '#f3a8bb'], ['#f9d0da', '#ee93ab'], ['#ffffff', '#f6c0ce']].map(([tip, base]) =>
       sprite(48, 64, (g) => {
@@ -70,48 +70,48 @@
   };
 
 
-  // The moon: lit from the upper left, maria, craters, Tycho with rays, limb darkening, and a waxing-gibbous shadow.
+  // The moon: a golden, nearly full moon. Lit from the upper left, with maria, craters, Tycho and its rays, limb darkening.
   // Drawn procedurally once (seeded, so it is the same moon every time).
   const makeMoon = () => sprite(240, 240, (g, w) => {
     const c = w / 2, R = 100;
     g.save(); g.beginPath(); g.arc(c, c, R, 0, TAU); g.clip();
     const base = g.createRadialGradient(c - 30, c - 34, 8, c, c, R * 1.05);
-    base.addColorStop(0, '#fbfcff'); base.addColorStop(0.55, '#e4e9f6'); base.addColorStop(1, '#b9c3de');
+    base.addColorStop(0, '#fffbe4'); base.addColorStop(0.5, '#fbe9a4'); base.addColorStop(1, '#dcb35a');
     g.fillStyle = base; g.fillRect(0, 0, w, w);
     for (const [x, y, rx, ry, al, rot] of [[-30, -34, 34, 26, 0.46, -0.3], [22, -30, 22, 20, 0.40, 0.2], [8, -6, 26, 22, 0.38, 0],
       [44, -2, 16, 12, 0.32, 0.4], [-52, 6, 18, 24, 0.30, 0], [-10, 38, 24, 14, 0.22, 0.2], [38, 34, 14, 10, 0.24, 0]]) {
       g.save(); g.translate(c + x, c + y); g.rotate(rot); g.scale(1, ry / rx);
       const rg = g.createRadialGradient(0, 0, 0, 0, 0, rx);
-      rg.addColorStop(0, `rgba(118,130,166,${al})`); rg.addColorStop(0.7, `rgba(118,130,166,${al * 0.7})`); rg.addColorStop(1, 'rgba(118,130,166,0)');
+      rg.addColorStop(0, `rgba(168,122,46,${al})`); rg.addColorStop(0.7, `rgba(168,122,46,${al * 0.7})`); rg.addColorStop(1, 'rgba(168,122,46,0)');
       g.fillStyle = rg; g.beginPath(); g.arc(0, 0, rx, 0, TAU); g.fill(); g.restore();
     }
     let seed = 7; const rr = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     for (let i = 0; i < 52; i++) {                                    // craters: soft pit + a lit rim on the upper-left
       const ang = rr() * TAU, d = Math.sqrt(rr()) * R * 0.93, x = c + Math.cos(ang) * d, y = c + Math.sin(ang) * d, cr = 1.2 + Math.pow(rr(), 2.2) * 7;
-      g.fillStyle = 'rgba(108,120,156,0.22)'; g.beginPath(); g.arc(x, y, cr, 0, TAU); g.fill();
-      g.strokeStyle = 'rgba(255,255,255,0.38)'; g.lineWidth = 0.8; g.beginPath(); g.arc(x - cr * 0.18, y - cr * 0.18, cr, Math.PI * 0.9, Math.PI * 1.9); g.stroke();
+      g.fillStyle = 'rgba(160,115,42,0.24)'; g.beginPath(); g.arc(x, y, cr, 0, TAU); g.fill();
+      g.strokeStyle = 'rgba(255,251,226,0.42)'; g.lineWidth = 0.8; g.beginPath(); g.arc(x - cr * 0.18, y - cr * 0.18, cr, Math.PI * 0.9, Math.PI * 1.9); g.stroke();
     }
     const ty = c + 56, tx = c - 8;                                    // Tycho and its rays
-    g.strokeStyle = 'rgba(255,255,255,0.13)'; g.lineWidth = 1.2;
+    g.strokeStyle = 'rgba(255,250,222,0.15)'; g.lineWidth = 1.2;
     for (let i = 0; i < 14; i++) { const ang = rr() * TAU, len = 22 + rr() * 38; g.beginPath(); g.moveTo(tx, ty); g.lineTo(tx + Math.cos(ang) * len, ty + Math.sin(ang) * len); g.stroke(); }
-    const tg = g.createRadialGradient(tx, ty, 0, tx, ty, 9); tg.addColorStop(0, 'rgba(255,255,255,0.85)'); tg.addColorStop(1, 'rgba(255,255,255,0)');
+    const tg = g.createRadialGradient(tx, ty, 0, tx, ty, 9); tg.addColorStop(0, 'rgba(255,253,235,0.9)'); tg.addColorStop(1, 'rgba(255,253,235,0)');
     g.fillStyle = tg; g.beginPath(); g.arc(tx, ty, 9, 0, TAU); g.fill();
     const limb = g.createRadialGradient(c, c, R * 0.55, c, c, R);      // limb darkening
-    limb.addColorStop(0, 'rgba(60,72,110,0)'); limb.addColorStop(1, 'rgba(60,72,110,0.38)');
+    limb.addColorStop(0, 'rgba(120,76,18,0)'); limb.addColorStop(1, 'rgba(120,76,18,0.36)');
     g.fillStyle = limb; g.fillRect(0, 0, w, w);
-    g.filter = 'blur(2.5px)';                                          // phase: the lit side is on the right, a soft shadow on the left
-    g.fillStyle = 'rgba(9,13,30,0.80)'; g.beginPath(); g.moveTo(c, c - R - 4);
+    g.filter = 'blur(2.5px)';                                          // phase: nearly full, with a thin soft shadow on the left edge
+    g.fillStyle = 'rgba(14,9,3,0.82)'; g.beginPath(); g.moveTo(c, c - R - 4);
     g.arc(c, c, R + 4, -Math.PI / 2, Math.PI / 2, true);
-    g.ellipse(c, c, R * 0.55, R + 4, 0, Math.PI / 2, Math.PI * 1.5, false);
+    g.ellipse(c, c, R * 0.84, R + 4, 0, Math.PI / 2, Math.PI * 1.5, false);
     g.closePath(); g.fill(); g.filter = 'none';
     g.restore();
-    g.strokeStyle = 'rgba(235,242,255,0.32)'; g.lineWidth = 1.2; g.beginPath(); g.arc(c, c, R - 0.6, 0, TAU); g.stroke();
+    g.strokeStyle = 'rgba(255,240,190,0.34)'; g.lineWidth = 1.2; g.beginPath(); g.arc(c, c, R - 0.6, 0, TAU); g.stroke();
   });
   // a drifting veil of cloud (several overlapping soft blobs)
   const makeCloud = () => sprite(360, 100, (g) => {
     for (const [x, y, r, al] of [[70, 56, 44, 0.5], [130, 46, 52, 0.6], [190, 52, 58, 0.6], [250, 48, 50, 0.5], [300, 56, 38, 0.4], [160, 62, 40, 0.4]]) {
       const rg = g.createRadialGradient(x, y, 0, x, y, r);
-      rg.addColorStop(0, `rgba(54,66,104,${al})`); rg.addColorStop(1, 'rgba(54,66,104,0)');
+      rg.addColorStop(0, `rgba(34,24,10,${al})`); rg.addColorStop(1, 'rgba(34,24,10,0)');
       g.fillStyle = rg; g.fillRect(x - r, y - r, r * 2, r * 2);
     }
   });
@@ -132,9 +132,6 @@
   const hold = { on: false, x: 0, y: 0, r: coarse ? 150 : 170 };
   const moon = { x: 0, y: 0, r: 40, lift: 0, pulse: 0, dim: 0 };
   let clouds = [], moonGlow = null, lastGlowO = -1;
-  const GW = 10;                                        // ground-snow column width (px)
-  let ground = new Float32Array(2), gtmp = new Float32Array(2), groundCols = 2, sprayBudget = 0;
-  const groundTarget = (i, time) => 22 + 6 * Math.sin(i * 0.09 + time * 0.03) + 3.5 * Math.sin(i * 0.31 - time * 0.05);
   let pile = [], pileLive = 0;                          // petals lying on the ground (day)
   let holdTimer = 0;
 
@@ -159,12 +156,6 @@
 
   function layoutScene() {
     moon.x = W * 0.35; moon.y = H * 0.15; moon.r = clamp(Math.min(W, H) * 0.07, 30, 72);
-    const cols = Math.ceil(W / GW) + 2;
-    if (cols !== groundCols) {
-      const old = ground, oc = groundCols;
-      ground = new Float32Array(cols); gtmp = new Float32Array(cols); groundCols = cols;
-      for (let i = 0; i < cols; i++) ground[i] = oc > 2 ? old[Math.min(oc - 1, Math.round(i * (oc - 1) / (cols - 1)))] : groundTarget(i, 0);
-    }
     if (!clouds.length) {                                // veils drift past the moon; the first one arrives within ~30 s
       const s = moon.r / 50;
       clouds = [{ x: moon.x - 380 * s, y: moon.y - 6 * s, w: 520 * s, h: 100 * s, v: 16 },
@@ -231,31 +222,6 @@
     const o = isDark ? Math.min(1, 0.78 * (1 - 0.5 * moon.dim) * (1 + 0.35 * moon.lift + 0.6 * moon.pulse)) : 0;
     if (Math.abs(o - lastGlowO) > 0.015) { lastGlowO = o; moonGlow.style.opacity = o.toFixed(2); }
   }
-  function stepGround(dt, now, wake) {                   // night: the snowy ground is a height map you can plough
-    const n = groundCols, g = ground, tmp = gtmp, L = LEVELS[level];
-    let kicked = 0;
-    if (wake && L.react) {
-      const amount = (0.4 + 0.6 * Math.min(1, Math.hypot(ptr.vx, ptr.vy) / 500)) * 60, Rg = 130;     // even a slow drag leaves a furrow
-      const c0 = Math.max(0, Math.floor((ptr.x - Rg) / GW)), c1 = Math.min(n - 1, Math.ceil((ptr.x + Rg) / GW));
-      for (let i = c0; i <= c1; i++) {
-        const d = Math.hypot(i * GW - ptr.x, (H - g[i]) - ptr.y);
-        if (d < Rg) { const f = 1 - d / Rg, cut = Math.min(g[i] - 2, amount * f * f * dt * L.react); if (cut > 0) { g[i] -= cut; kicked += cut; } }
-      }
-      sprayBudget += kicked * 0.06;
-      let launched = 0;
-      while (sprayBudget >= 1 && launched < 3 && active > 0) {      // snow thrown up from the furrow
-        sprayBudget -= 1; launched++;
-        const p = particles[(Math.random() * active) | 0], i = clamp(Math.round((ptr.x + rnd(-100, 100)) / GW), 0, n - 1);
-        p.x = i * GW + rnd(-5, 5); p.y = H - g[i] - 2; p.vx = ptr.vx * 0.25 + rnd(-50, 50); p.vy = -rnd(70, 170); p.age = 2; p.glow = 0.9; p.boost = 0.8;
-      }
-      if (sprayBudget > 3) sprayBudget = 3;
-    }
-    const sm = Math.min(1, dt * 1.0), heal = Math.min(1, dt * 0.06);       // drifts settle slowly; furrows linger ~15 s then fade
-    for (let i = 1; i < n - 1; i++) tmp[i] = g[i] + ((g[i - 1] + g[i + 1]) * 0.5 - g[i]) * sm;      // drifts settle
-    tmp[0] = tmp[1]; tmp[n - 1] = tmp[n - 2];
-    for (let i = 0; i < n; i++) g[i] = tmp[i] + (groundTarget(i, t) - tmp[i]) * heal;               // furrows slowly heal
-  }
-
   function step(dt, now) {
     const L = LEVELS[level];
     if (t > nextGust) { gust = { t0: t, amp: rnd(0.8, 1.4) * (Math.random() < 0.5 ? -1 : 1) }; nextGust = t + rnd(25, 50); }
@@ -279,7 +245,7 @@
       if (u >= 1) { ripples.splice(k, 1); continue; }
       waves.push({ x: r.x, y: r.y, rad: 24 + 380 * (1 - Math.pow(1 - u, 3)), f0: 1 - u });
     }
-    if (isDark) { updateMoon(dt, now); stepGround(dt, now, wake); }
+    if (isDark) updateMoon(dt, now);
 
     for (let i = 0; i < active; i++) {
       const p = particles[i], z = p.z;
@@ -339,13 +305,7 @@
 
       if (p.x < -40) p.x = W + 40; else if (p.x > W + 40) p.x = -40;
       if (isDark) {
-        const col = clamp(Math.round(p.x / GW), 0, groundCols - 1);
-        if (p.y > H - ground[col] - 2) {                 // a flake lands: the drift grows a little right there
-          const add = 6 * (0.4 + z); ground[col] = Math.min(52, ground[col] + add);
-          if (col > 0) ground[col - 1] = Math.min(52, ground[col - 1] + add * 0.5);
-          if (col < groundCols - 1) ground[col + 1] = Math.min(52, ground[col + 1] + add * 0.5);
-          respawn(p);
-        }
+        if (p.y > H + 10) respawn(p);                    // snow simply falls out of the bottom of the screen
       } else if (p.y > fy + p.land) {                    // a petal lands and stays; the oldest ones fade when the pile is full
         p.rest = 1; p.restT = 0; p.restMax = rnd(70, 140); p.vx = p.vy = 0;
         p.y = fy + p.land; p.ang = rnd(0, TAU); p.restSx = rnd(0.35, 0.8);
@@ -355,59 +315,34 @@
   }
 
   // ---------------------------------------------------------------- drawing
-  function drawGround(time, animated, fade) {
-    const n = groundCols, g = ground;
-    ctx.beginPath(); ctx.moveTo(0, H + 2);                // a farther, dimmer drift behind the near one gives depth
-    for (let i = 0; i < n; i++) ctx.lineTo(i * GW, H - g[i] * 1.5 - 10 - 5 * Math.sin(i * 0.045 + 1.3));
-    ctx.lineTo((n - 1) * GW, H + 2); ctx.closePath();
-    ctx.fillStyle = `rgba(170,190,235,${0.07 * fade})`; ctx.fill();
-    ctx.beginPath(); ctx.moveTo(0, H + 2);                // the near drift you can plough
-    for (let i = 0; i < n; i++) ctx.lineTo(i * GW, H - g[i]);
-    ctx.lineTo((n - 1) * GW, H + 2); ctx.closePath();
-    const gr = ctx.createLinearGradient(0, H - 64, 0, H);
-    gr.addColorStop(0, `rgba(232,240,255,${0.34 * fade})`); gr.addColorStop(1, `rgba(190,206,245,${0.12 * fade})`);
-    ctx.fillStyle = gr; ctx.fill();
-    ctx.beginPath();
-    for (let i = 0; i < n; i++) { if (i) ctx.lineTo(i * GW, H - g[i]); else ctx.moveTo(0, H - g[0]); }
-    ctx.strokeStyle = `rgba(240,246,255,${0.42 * fade})`; ctx.lineWidth = 1.4; ctx.stroke();
-    if (animated) {                                      // moonlit glints on the snow
-      for (let k = 0; k < 9; k++) {
-        const x = ((k * 0.137 + 0.08) % 1) * W, i = clamp(Math.round(x / GW), 0, n - 1), ph = Math.sin(time * 0.8 + k * 2.1);
-        if (ph > 0.55) { ctx.globalAlpha = Math.pow((ph - 0.55) / 0.45, 2) * 0.95 * fade; ctx.drawImage(S.flakeIcy, x - 6, H - g[i] - 7, 12, 12); }
-      }
-      ctx.globalAlpha = 1;
-    }
-  }
-
   function render(time, animated) {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     const fade = themeFade, fx = 1 - 0.3 * focus;
     const moonLightR = Math.min(700, Math.max(W, H) * 0.55);
 
-    if (isDark) {                                        // the moon, its drifting cloud veils, and the snowy ground
+    if (isDark) {                                        // the moon and its drifting cloud veils
       const sc = moon.r / 100, rot = -0.32, cr = Math.cos(rot) * dpr, sr = Math.sin(rot) * dpr;
-      ctx.globalAlpha = fade * (1 - 0.55 * moon.dim);
+      ctx.globalAlpha = fade * 0.94 * (1 - 0.55 * moon.dim);
       ctx.setTransform(cr, sr, -sr, cr, moon.x * dpr, moon.y * dpr);
       ctx.drawImage(S.moon, -120 * sc, -120 * sc, 240 * sc, 240 * sc);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       for (const c of clouds) { ctx.globalAlpha = 0.32 * fade; ctx.drawImage(S.cloud, c.x - c.w / 2, c.y - c.h / 2, c.w, c.h); }
       ctx.globalAlpha = 1;
-      drawGround(time, animated, fade);
     }
 
     const lanternOn = animated && ptr.active && (ptr.type !== 'touch' || ptr.down) && performance.now() - ptr.lastMove < 1800;
     if (lanternOn) {                                     // a soft light that follows the pointer
       ctx.globalCompositeOperation = isDark ? 'lighter' : 'source-over';
       ctx.globalAlpha = (isDark ? 0.13 : 0.34) * fade;
-      ctx.drawImage(isDark ? S.haloCool : S.haloSoft, ptr.x - 110, ptr.y - 110, 220, 220);
+      ctx.drawImage(isDark ? S.haloWarm : S.haloSoft, ptr.x - 110, ptr.y - 110, 220, 220);
       ctx.globalCompositeOperation = 'source-over';
     }
     if (hold.on) {                                       // the "time slows here" halo breathes
       const rr = hold.r * (0.92 + 0.06 * Math.sin(time * 2.2));
       ctx.globalCompositeOperation = isDark ? 'lighter' : 'source-over';
       ctx.globalAlpha = isDark ? 0.12 : 0.3;
-      ctx.drawImage(isDark ? S.haloCool : S.haloSoft, hold.x - rr, hold.y - rr, rr * 2, rr * 2);
+      ctx.drawImage(isDark ? S.haloWarm : S.haloSoft, hold.x - rr, hold.y - rr, rr * 2, rr * 2);
       ctx.globalCompositeOperation = 'source-over';
     }
     for (let i = ripples.length - 1; i >= 0; i--) {      // tap ripples
@@ -415,7 +350,7 @@
       if (u >= 1) { ripples.splice(i, 1); continue; }
       const e = 1 - Math.pow(1 - u, 3);
       ctx.globalAlpha = 0.24 * (1 - u) * fade; ctx.lineWidth = 1.2;
-      ctx.strokeStyle = isDark ? 'rgb(205,220,255)' : 'rgb(214,120,140)';
+      ctx.strokeStyle = isDark ? 'rgb(255,222,150)' : 'rgb(214,120,140)';
       ctx.beginPath(); ctx.arc(r.x, r.y, 24 + 380 * e, 0, TAU); ctx.stroke();
     }
 
@@ -435,7 +370,8 @@
         if (a <= 0.01) continue;
         a = Math.min(1, a);
         if (bokeh) { ctx.globalAlpha = a * 0.5; ctx.drawImage(S.bokeh, p.x - d / 2, p.y - d / 2, d, d); continue; }
-        ctx.globalAlpha = a; ctx.drawImage(S.flakeIcy, p.x - d / 2, p.y - d / 2, d, d);
+        ctx.globalAlpha = a * (1 - 0.7 * Math.min(1, I * 1.5)); ctx.drawImage(S.flakeIcy, p.x - d / 2, p.y - d / 2, d, d);
+        if (I > 0.02) { ctx.globalAlpha = Math.min(1, a * Math.min(1, I * 1.5) * 1.2); ctx.drawImage(S.flakeWarm, p.x - d / 2, p.y - d / 2, d, d); }
       } else {
         const len = 9 + z * 13, w = len * 0.75;
         let sx = p.rest ? p.restSx : Math.cos(p.fl);
@@ -597,7 +533,7 @@
     const text = document.createElement('div');
     const h = document.createElement('h3'); h.textContent = 'Ambience';
     const p = document.createElement('p');
-    p.textContent = isDark ? 'Moonlit snow. Move to stir the air, drag along the ground to plough it, tap to send a ripple, hold to slow time.' : 'Falling petals. Move to stir them, drag through the pile to scatter it, tap to send a ripple, hold to slow time.';
+    p.textContent = isDark ? 'Snow under a golden moon. Move to stir the air, tap to send a ripple, hold to slow time.' : 'Falling petals. Move to stir them, drag through the pile to scatter it, tap to send a ripple, hold to slow time.';
     text.append(h, p);
     seg = document.createElement('div'); seg.className = 'seg'; seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-label', 'Ambience');
     for (const [id, label] of [['still', 'Still'], ['calm', 'Calm'], ['lively', 'Lively']]) {
@@ -609,7 +545,7 @@
     host.insertBefore(row, host.children[1] || null);   // right under "Theme"
     syncSegmented();
     new MutationObserver(() => { p.textContent = document.body.getAttribute('data-theme') === 'dark'
-      ? 'Moonlit snow. Move to stir the air, drag along the ground to plough it, tap to send a ripple, hold to slow time.'
+      ? 'Snow under a golden moon. Move to stir the air, tap to send a ripple, hold to slow time.'
       : 'Falling petals. Move to stir them, drag through the pile to scatter it, tap to send a ripple, hold to slow time.'; })
       .observe(document.body, { attributes: true, attributeFilter: ['data-theme'] });
   }
@@ -619,7 +555,7 @@
     if (!box || n >= 3 || LEVELS[level].speed === 0) return;
     store.set('sanctuaryHint', String(n + 1));
     const hint = document.createElement('p'); hint.className = 'ambient-hint';
-    hint.textContent = coarse ? 'Touch the background. Drag along the ground, tap for a ripple, hold to slow time.' : 'Move your mouse through the air. Drag along the ground, click for a ripple, hold to slow time.';
+    hint.textContent = coarse ? 'Touch the background. Tap for a ripple, hold to slow time.' : 'Move your mouse through the air. Click for a ripple, hold to slow time.';
     box.append(hint);
   }
 
@@ -631,9 +567,7 @@
   window.Ambience = {                                     // small public surface (also used by tests)
     setLevel, getLevel: () => level, burst,
     stats: () => ({ level, kind: isDark ? 'snow' : 'petals', count: active, fps: Math.round(fpsEMA), running, quality, bursts, holding: hold.on, focus, frames, dpr,
-      moon: { x: moon.x, y: moon.y, r: moon.r, pulse: moon.pulse, lift: moon.lift, dim: moon.dim }, pile: pileLive, ripples: ripples.length,
-      groundAvg: ground.reduce((s, v) => s + v, 0) / ground.length, groundMin: Math.min.apply(null, ground) }),
-    groundRange: (x0, x1) => { let s = 0, n = 0; for (let i = Math.max(0, Math.floor(x0 / GW)); i <= Math.min(groundCols - 1, Math.ceil(x1 / GW)); i++) { s += ground[i]; n++; } return n ? s / n : 0; },
+      moon: { x: moon.x, y: moon.y, r: moon.r, pulse: moon.pulse, lift: moon.lift, dim: moon.dim }, pile: pileLive, ripples: ripples.length, }),
     simulate: (sec) => { const n = Math.round(sec / 0.05), now = performance.now(); for (let k = 0; k < n; k++) { t += 0.05; step(0.05, now); } },
     probe: (x, y, r) => { let n = 0, s = 0, m = 0; for (let i = 0; i < active; i++) { const p = particles[i]; if (!p.rest && Math.hypot(p.x - x, p.y - y) < r) { const v = Math.hypot(p.vx, p.vy); n++; s += v; if (v > m) m = v; } } return { n, speed: n ? s / n : 0, max: m }; }
   };

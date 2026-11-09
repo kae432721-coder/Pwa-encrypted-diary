@@ -82,8 +82,8 @@ const S = (p) => p.evaluate(() => Ambience.stats());
   ok("night shows snow", st.kind === "snow");
   ok("the moon sits where the old light was (35% across, 15% down)", Math.abs(st.moon.x - 1600 * 0.35) < 2 && Math.abs(st.moon.y - 900 * 0.15) < 2, JSON.stringify(st.moon));
   await p.waitForTimeout(1500);
-  const px = await p.evaluate(() => { const c = document.getElementById("snow-canvas"), s = Ambience.stats().moon, d = c.getContext("2d").getImageData(Math.round(s.x * c.width / innerWidth) + 6, Math.round(s.y * c.height / innerHeight), 1, 1).data; return { a: d[3], lum: (d[0] + d[1] + d[2]) / 3 }; });
-  ok("the moon is actually drawn (bright, opaque disc)", px.a > 200 && px.lum > 150, JSON.stringify(px));
+  const px = await p.evaluate(() => { const c = document.getElementById("snow-canvas"), s = Ambience.stats().moon, d = c.getContext("2d").getImageData(Math.round(s.x * c.width / innerWidth) + 6, Math.round(s.y * c.height / innerHeight), 1, 1).data; return { a: d[3], lum: (d[0] + d[1] + d[2]) / 3, r: d[0], b: d[2] }; });
+  ok("the moon is actually drawn (bright, opaque, golden disc)", px.a > 200 && px.lum > 150 && px.r > px.b + 25, JSON.stringify(px));
   ok("moon halo is visible at night and hidden by day", await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".moon-glow")).opacity)) > 0.3);
   // tapping the moon makes it glow (on the Codex screen, where nothing covers it)
   await p.evaluate(() => document.querySelector('.nav-item[data-target="view-people"]').click()); await p.waitForTimeout(400);
@@ -95,17 +95,8 @@ const S = (p) => p.evaluate(() => Ambience.stats());
   ok("a tap sends a ripple through the air", (await S(p)).ripples >= 1);
   await p.waitForTimeout(1300);
   ok("…which fades away", (await S(p)).ripples === 0, String((await S(p)).ripples));
-  // plough the snowy ground
-  await p.mouse.move(20, 20); await p.waitForTimeout(300);
-  const g0 = await p.evaluate(() => Ambience.groundRange(500, 900));
-  ok("the ground has snow drifts (> 12px)", g0 > 12, g0.toFixed(1));
-  let gmin = g0;
-  for (let k = 0; k < 2; k++) for (let i = 0; i < 30; i++) { await p.mouse.move(500 + i * 14, 862); await p.waitForTimeout(10); gmin = Math.min(gmin, await p.evaluate(() => Ambience.groundRange(500, 900))); }
-  ok("dragging along the ground ploughs a furrow", gmin < g0 - 3, `${g0.toFixed(1)} -> ${gmin.toFixed(1)}`);
-  await p.mouse.move(20, 20); await p.waitForTimeout(400);
-  await p.evaluate(() => Ambience.simulate(60));
-  const g2 = await p.evaluate(() => Ambience.groundRange(500, 900));
-  ok("…and the furrow heals", g2 > gmin + 2, `${gmin.toFixed(1)} -> ${g2.toFixed(1)}`);
+  // the night has no snow piling up on the ground
+  ok("no snow drifts are drawn at the bottom of the screen at night", await p.evaluate(() => { const c = document.getElementById("snow-canvas"); const y = c.height - 4, row = c.getContext("2d").getImageData(0, y, c.width, 1).data; let lit = 0; for (let x = 0; x < c.width; x++) if (row[x * 4 + 3] > 40) lit++; return lit < c.width * 0.25; }));
   await p.click("#btn-theme-toggle-icon"); await p.waitForTimeout(1400);
   ok("by day the moon halo is hidden", await p.evaluate(() => parseFloat(getComputedStyle(document.querySelector(".moon-glow")).opacity)) < 0.05);
 
